@@ -1,0 +1,2 @@
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ar qc libmidifile.a CMakeFiles/midifile.dir/src/Options.cpp.o CMakeFiles/midifile.dir/src/Binasc.cpp.o CMakeFiles/midifile.dir/src/MidiEvent.cpp.o CMakeFiles/midifile.dir/src/MidiEventList.cpp.o CMakeFiles/midifile.dir/src/MidiFile.cpp.o CMakeFiles/midifile.dir/src/MidiMessage.cpp.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib libmidifile.a

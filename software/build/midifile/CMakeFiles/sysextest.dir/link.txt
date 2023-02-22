@@ -1,0 +1,1 @@
+/usr/local/opt/llvm/bin/clang++  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.1.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/sysextest.dir/tools/sysextest.cpp.o -o sysextest  libmidifile.a 
