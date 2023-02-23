@@ -92,7 +92,7 @@ void getKeyPosition(cv::VideoCapture& video, int frame_num, std::vector<KeyInfo>
     }
 
     // imgの表示
-    // cv::imshow("img", img);
+    cv::imshow("img", img);
 }
 
 }  // namespace Recognize
