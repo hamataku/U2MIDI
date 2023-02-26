@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Hello OpenCV.js</title>
+</head>
+<body>
+<h2>Hello OpenCV.js</h2>
+<p id="status">OpenCV.js is loading...</p>
+<div>
+  <div class="inputoutput">
+    <video id="video" muted width="320" height="240"></video>
+    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
+  </div>
+  <div class="inputoutput">
+    <canvas id="canvasOutput" ></canvas>
+    <div class="caption">canvasOutput</div>
+  </div>
+</div>
+<script type="text/javascript">
+    let video = document.getElementById('video');
+    let inputElement = document.getElementById('fileInput');
+    inputElement.addEventListener('change', (e) => {
+        video.src = URL.createObjectURL(e.target.files[0]);
+        countFrames();
+    }, false);
+    function onOpenCvReady() {
+        document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+    }
+
+    function countFrames() {
+        let width = video.width;
+        let height = video.height;
+        let src = new cv.Mat(height, width, cv.CV_8UC4);
+        let dst = new cv.Mat(height, width, cv.CV_8UC1);
+        
+        let loop = setInterval(() => {
+            try {
+                if(video.duration <= video.currentTime + 0.1){
+                    console.log("end");
+                    clearInterval(loop);
+                    src.delete();
+                    dst.delete();
+                    return
+                }
+                video.currentTime += 0.1;
+                let cap = new cv.VideoCapture(video);
+                cap.read(src);
+                cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+                cv.imshow('canvasOutput', dst);
+            } catch(e){
+                console.log("error")
+                console.log(e);
+                clearInterval(loop);
+                src.delete();
+                dst.delete();
+            }
+        }, 100)
+    }
+
+    //WebMidiの実験
+    function onMIDISuccess(midiAccess) {
+            console.log("MIDI ready!");
+             // デバイスが 1台だけつながっている前提 ないとエラーになる
+            const input = midiAccess.inputs.values().next();
+            console.log(input.value.manufacturer);
+            console.log(input.value.name);
+            input.value.onmidimessage = onMIDIMessage;
+        }
+
+        function onMIDIFailure(msg) {
+            console.log("Failed to get MIDI access - " + msg);
+        }
+
+        function onMIDIMessage(message) {
+            const data = message.data;
+            console.log("MIDI data: ", data);
+        }
+
+        navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+</script>
+<script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+</body>
+</html>
