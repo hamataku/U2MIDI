@@ -2,10 +2,9 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Hello OpenCV.js</title>
 </head>
 <body>
-<h2>Hello OpenCV.js</h2>
+<h2>OpenCV.jsのテスト</h2>
 <p id="status">OpenCV.js is loading...</p>
 <div>
   <div class="inputoutput">
@@ -17,7 +16,15 @@
     <div class="caption">canvasOutput</div>
   </div>
 </div>
-<script type="text/javascript">
+
+<div id="webmidi">
+    <h2>WebMIDI APIのテスト</h2>
+    <p>{{ midiOutputIsReady ? "ボタンを押すと「ドレミファソラシド」が鳴ります" : "MIDIデバイスがありません" }}</p>
+    <button @click="playScale()">鳴らす</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+<script>
     let video = document.getElementById('video');
     let inputElement = document.getElementById('fileInput');
     inputElement.addEventListener('change', (e) => {
@@ -59,25 +66,57 @@
     }
 
     //WebMidiの実験
-    function onMIDISuccess(midiAccess) {
-            console.log("MIDI ready!");
-             // デバイスが 1台だけつながっている前提 ないとエラーになる
-            const input = midiAccess.inputs.values().next();
-            console.log(input.value.manufacturer);
-            console.log(input.value.name);
-            input.value.onmidimessage = onMIDIMessage;
-        }
 
-        function onMIDIFailure(msg) {
-            console.log("Failed to get MIDI access - " + msg);
-        }
+    new Vue({
+        el: '#webmidi',
+        data: {
+            midiOutputIsReady: false,
+            outputDevice: null,
+            count: 0
+        },
+        computed: {
 
-        function onMIDIMessage(message) {
-            const data = message.data;
-            console.log("MIDI data: ", data);
+        },
+        methods: {
+            playScale() {
+                console.log("playScale");
+                let o = this.outputDevice;
+                let scale = [60, 62, 64, 65, 67, 69, 71, 72];
+                for(let i = 0; i < 8; i++){
+                    o.send([0x90, scale[i], 100], window.performance.now() + 200+1000*i);
+                    o.send([0x80, scale[i], 0], window.performance.now() + 200+1000*(i+1));
+                }
+            }
+        },
+        mounted(){
+            navigator.requestMIDIAccess().then((midiAccess)=>{ //成功
+                console.log("MIDI ready!");
+                // デバイスが 1台だけつながっている前提 ないとエラーになる
+                // const input = midiAccess.inputs.values().next();
+                // console.log(input.value.manufacturer);
+                // console.log(input.value.name);
+                // input.value.onmidimessage = onMIDIMessage;
+                try {
+                    let output = midiAccess.outputs.values().next();
+                    this.outputDevice = output.value;
+                    console.log(this.outputDevice.name);
+                    this.midiOutputIsReady = true;
+                } catch(e) {
+                    console.log("cannot find MIDI device");
+                }
+            }, (msg)=>{ //失敗
+                console.log("Failed to get MIDI access - " + msg);
+            });
         }
+    })
+    
 
-        navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+    function onMIDIMessage(message) {
+        const data = message.data;
+        console.log("MIDI data: ", data);
+    }
+
+    
 </script>
 <script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
 </body>
