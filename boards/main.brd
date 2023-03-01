@@ -210,6 +210,7 @@
 </polygon>
 <text x="44.704" y="16.002" size="0.8128" layer="27">SWCLK</text>
 <text x="44.704" y="9.398" size="0.8128" layer="27">SWDIO</text>
+<text x="101.346" y="10.414" size="5.08" layer="27">Uplight</text>
 </plain>
 <libraries>
 <library name="Passive_Robotech">

@@ -60,6 +60,7 @@
         "variant": "cpp",
         "vector": "cpp",
         "__verbose_abort": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "stm32f1xx.h": "c"
     }
 }
