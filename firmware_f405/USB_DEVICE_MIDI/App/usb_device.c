@@ -1,8 +1,8 @@
 /**
  ******************************************************************************
- * @file           : usbd_conf.h
+ * @file           : usb_device.c
  * @version        : v2.0_Cube
- * @brief          : Header for usbd_conf.c file.
+ * @brief          : This file implements the USB Device
  ******************************************************************************
  * This notice applies to any and all portions of this file
  * that are not between comment pairs USER CODE BEGIN and
@@ -47,154 +47,86 @@
  ******************************************************************************
  */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __USBD_CONF__H__
-#define __USBD_CONF__H__
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Includes ------------------------------------------------------------------*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "stm32f1xx.h"
-#include "stm32f1xx_hal.h"
-#include "usbd_def.h"
 
-/* USER CODE BEGIN INCLUDE */
+#include "usb_device.h"
+#include "usbd_core.h"
+#include "usbd_desc.h"
 
-/* USER CODE END INCLUDE */
+/* USER CODE BEGIN Includes */
+#include "usbd_midi.h"
+#include "usbd_midi_if.h"
 
-/** @addtogroup USBD_OTG_DRIVER
- * @{
+/* USER CODE END Includes */
+
+/* USER CODE BEGIN PV */
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE END PV */
+
+/* USER CODE BEGIN PFP */
+/* Private function prototypes -----------------------------------------------*/
+
+/* USER CODE END PFP */
+
+/* USB Device Core handle declaration. */
+USBD_HandleTypeDef hUsbDeviceFS;
+
+/*
+ * -- Insert your variables declaration here --
  */
+/* USER CODE BEGIN 0 */
 
-/** @defgroup USBD_CONF USBD_CONF
- * @brief Configuration file for Usb otg low level driver.
- * @{
+/* USER CODE END 0 */
+
+/*
+ * -- Insert your external function declaration here --
  */
+/* USER CODE BEGIN 1 */
 
-/** @defgroup USBD_CONF_Exported_Variables USBD_CONF_Exported_Variables
- * @brief Public variables.
- * @{
- */
+void MX_USB_MIDI_INIT(void)
+{
+    USBD_Init(&hUsbDeviceFS, &FS_Desc, DEVICE_FS);
 
-/**
- * @}
- */
+    USBD_RegisterClass(&hUsbDeviceFS, &USBD_MIDI);
 
-/** @defgroup USBD_CONF_Exported_Defines USBD_CONF_Exported_Defines
- * @brief Defines for configuration of the Usb device.
- * @{
- */
+    USBD_MIDI_RegisterInterface(&hUsbDeviceFS, &USBD_Interface_fops_FS);
 
-/*---------- -----------*/
-#define USBD_MAX_STR_DESC_SIZ 512
-/*---------- -----------*/
-#define USBD_SUPPORT_USER_STRING 0
-/*---------- -----------*/
-#define USBD_DEBUG_LEVEL 0
-/*---------- -----------*/
-#define MAX_STATIC_ALLOC_SIZE 512
-
-/****************************************/
-/* #define for FS and HS identification */
-#define DEVICE_FS 0
-
-/**
- * @}
- */
-
-/** @defgroup USBD_CONF_Exported_Macros USBD_CONF_Exported_Macros
- * @brief Aliases.
- * @{
- */
-
-/* Memory management macros */
-
-/** Alias for memory allocation. */
-#define USBD_malloc (uint32_t*)USBD_static_malloc
-
-/** Alias for memory release. */
-#define USBD_free USBD_static_free
-
-/** Alias for memory set. */
-#define USBD_memset /* Not used */
-
-/** Alias for memory copy. */
-#define USBD_memcpy /* Not used */
-
-/** Alias for delay. */
-#define USBD_Delay HAL_Delay
-
-/* DEBUG macros */
-
-#if (USBD_DEBUG_LEVEL > 0)
-#define USBD_UsrLog(...) \
-    printf(__VA_ARGS__); \
-    printf("\n");
-#else
-#define USBD_UsrLog(...)
-#endif
-
-#if (USBD_DEBUG_LEVEL > 1)
-
-#define USBD_ErrLog(...) \
-    printf("ERROR: ");   \
-    printf(__VA_ARGS__); \
-    printf("\n");
-#else
-#define USBD_ErrLog(...)
-#endif
-
-#if (USBD_DEBUG_LEVEL > 2)
-#define USBD_DbgLog(...) \
-    printf("DEBUG : ");  \
-    printf(__VA_ARGS__); \
-    printf("\n");
-#else
-#define USBD_DbgLog(...)
-#endif
-
-/**
- * @}
- */
-
-/** @defgroup USBD_CONF_Exported_Types USBD_CONF_Exported_Types
- * @brief Types.
- * @{
- */
-
-/**
- * @}
- */
-
-/** @defgroup USBD_CONF_Exported_FunctionsPrototype USBD_CONF_Exported_FunctionsPrototype
- * @brief Declaration of public functions for Usb device.
- * @{
- */
-
-/* Exported functions -------------------------------------------------------*/
-void* USBD_static_malloc(uint32_t size);
-void USBD_static_free(void* p);
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-#ifdef __cplusplus
+    USBD_Start(&hUsbDeviceFS);
 }
-#endif
 
-#endif /* __USBD_CONF__H__ */
+/* USER CODE END 1 */
+
+/**
+ * Init USB device Library, add supported class and start the library
+ * @retval None
+ */
+void MX_USB_DEVICE_Init(void)
+{
+    /* USER CODE BEGIN USB_DEVICE_Init_PreTreatment */
+#ifdef USBMIDI
+    /* USER CODE END USB_DEVICE_Init_PreTreatment */
+
+    /* Init Device Library, add supported class and start the library. */
+    USBD_Init(&hUsbDeviceFS, &FS_Desc, DEVICE_FS);
+
+    USBD_RegisterClass(&hUsbDeviceFS, &USBD_CDC);
+
+    USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_Interface_fops_FS);
+
+    USBD_Start(&hUsbDeviceFS);
+
+    /* USER CODE BEGIN USB_DEVICE_Init_PostTreatment */
+#endif
+    /* USER CODE END USB_DEVICE_Init_PostTreatment */
+}
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

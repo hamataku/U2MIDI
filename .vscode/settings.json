@@ -61,6 +61,8 @@
         "vector": "cpp",
         "__verbose_abort": "cpp",
         "algorithm": "cpp",
-        "stm32f1xx.h": "c"
+        "stm32f1xx.h": "c",
+        "usart.h": "c",
+        "main.h": "c"
     }
 }
