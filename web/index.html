@@ -1,10 +1,30 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="utf-8">
-</head>
-<body>
-<h2>OpenCV.jsのテスト</h2>
+  <head>
+    <meta charset="utf-8" />
+    <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+    <link href="./style.css" rel="stylesheet">
+  </head>
+  <body>
+    <div id="video_test">
+      <h2>Videoの再生制御のテスト</h2>
+      <!-- <video id="my-player" :src="src" width="320" height="240" controls></video> -->
+      <video id="my-player" class="video-js" controls preload="auto" data-setup='{}' width="640" height="480">
+        <source src="./mov_hts-samp001.mp4" type="video/mp4"/>
+      </video>
+      <br>
+      <!-- <button @click="switchABMode">{{ ABisActive ? "AB再生を無効化" : "AB再生を有効化"}}</button> -->
+      <toggle-button v-model="ABisActive"></toggle-button>
+      <button @click="restart">＜</button>
+      <button @click="setA">A</button>
+      <button @click="setB">B</button>
+      <div class="caption">
+        imageSrc
+        <input type="file" id="fileInput" name="file" @change="setSrc" />
+      </div>
+    </div>
+
+    <!-- <h2>OpenCV.jsのテスト</h2>
 <p id="status">OpenCV.js is loading...</p>
 <div>
   <div class="inputoutput">
@@ -15,109 +35,217 @@
     <canvas id="canvasOutput" ></canvas>
     <div class="caption">canvasOutput</div>
   </div>
-</div>
+</div> -->
 
-<div id="webmidi">
-    <h2>WebMIDI APIのテスト</h2>
-    <p>{{ midiOutputIsReady ? "ボタンを押すと「ドレミファソラシド」が鳴ります" : "MIDIデバイスがありません" }}</p>
-    <button @click="playScale()">鳴らす</button>
-</div>
+    <div id="webmidi">
+      <h2>WebMIDI APIのテスト</h2>
+      <p>
+        {{ midiOutputIsReady ? "ボタンを押すと「ドレミファソラシド」が鳴ります"
+        : "MIDIデバイスがありません" }}
+      </p>
+      <button @click="playScale()">鳴らす</button>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-<script>
-    let video = document.getElementById('video');
-    let inputElement = document.getElementById('fileInput');
-    inputElement.addEventListener('change', (e) => {
-        video.src = URL.createObjectURL(e.target.files[0]);
-        countFrames();
-    }, false);
-    function onOpenCvReady() {
-        document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
-    }
+    <!--jQueryはマーカー挿入にのみ用いる-->
+    <script
+  src="https://code.jquery.com/jquery-3.6.3.js"
+  integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM="
+  crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-js-toggle-button@1.3.2/dist/index.min.js"></script>
 
-    function countFrames() {
-        let width = video.width;
-        let height = video.height;
-        let src = new cv.Mat(height, width, cv.CV_8UC4);
-        let dst = new cv.Mat(height, width, cv.CV_8UC1);
-        
-        let loop = setInterval(() => {
-            try {
-                if(video.duration <= video.currentTime + 0.1){
-                    console.log("end");
-                    clearInterval(loop);
-                    src.delete();
-                    dst.delete();
-                    return
-                }
-                video.currentTime += 0.1;
-                let cap = new cv.VideoCapture(video);
-                cap.read(src);
-                cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-                cv.imshow('canvasOutput', dst);
-            } catch(e){
-                console.log("error")
-                console.log(e);
-                clearInterval(loop);
-                src.delete();
-                dst.delete();
-            }
-        }, 100)
-    }
+    <script>
+      //Videoの実験
+      Vue.use(window['vue-js-toggle-button'].default)
 
-    //WebMidiの実験
-
-    new Vue({
-        el: '#webmidi',
+      new Vue({
+        el: "#video_test",
         data: {
-            midiOutputIsReady: false,
-            outputDevice: null,
-            count: 0
+            video_object: null,
+            ABisActive: false,
+            video_length: null,
+            Atime: null,
+            Btime: null,
         },
         computed: {
-
+            Apos: function () {
+              return((this.Atime / this.video_length * 100) + "%");
+            },
+            Bpos: function () {
+              return((this.Btime / this.video_length * 100) + "%");
+            },
         },
         methods: {
-            playScale() {
-                console.log("playScale");
-                let o = this.outputDevice;
-                let scale = [60, 62, 64, 65, 67, 69, 71, 72];
-                for(let i = 0; i < 8; i++){
-                    o.send([0x90, scale[i], 100], window.performance.now() + 200+1000*i);
-                    o.send([0x80, scale[i], 0], window.performance.now() + 200+1000*(i+1));
-                }
+          setSrc(e) {
+            let file = e.target.files[0];
+            let fileURL = URL.createObjectURL(file);
+            let fileType = file.type;
+            this.video_object.src({type: fileType, src: fileURL});
+            this.video_object.load();
+            this.video_object.on("loadeddata", () => {
+              this.video_length = this.video_object.duration();
+            });
+            this.Atime = null;
+            this.Btime = null;
+          },
+          setA(){
+            let now = this.video_object.currentTime();
+            if(this.Btime && this.Btime <= now){
+              return;
             }
+            this.Atime = now;
+          },
+          setB(){
+            let now = this.video_object.currentTime();
+            if(this.Atime && now <= this.Atime){
+              return;
+            }
+            this.Btime = now;
+          },
+          restart(){
+            this.video_object.currentTime(0);
+          }
+        },
+        watch: {
+          Atime: {
+            immediate: true,
+            handler: function () {
+              $('.marker-a').css("left", this.Apos);
+            }
+          },
+          Btime: {
+            immediate: true,
+            handler: function () {
+              $('.marker-b').css("left", this.Bpos);
+            }
+          }
         },
         mounted(){
-            navigator.requestMIDIAccess().then((midiAccess)=>{ //成功
-                console.log("MIDI ready!");
-                // デバイスが 1台だけつながっている前提 ないとエラーになる
-                // const input = midiAccess.inputs.values().next();
-                // console.log(input.value.manufacturer);
-                // console.log(input.value.name);
-                // input.value.onmidimessage = onMIDIMessage;
-                try {
-                    let output = midiAccess.outputs.values().next();
-                    this.outputDevice = output.value;
-                    console.log(this.outputDevice.name);
-                    this.midiOutputIsReady = true;
-                } catch(e) {
-                    console.log("cannot find MIDI device");
-                }
-            }, (msg)=>{ //失敗
-                console.log("Failed to get MIDI access - " + msg);
-            });
-        }
-    })
-    
+          this.video_object = videojs("my-player");
+          this.video_object.ready(() => {
+            let p = jQuery(this.video_object.controlBar.progressControl.children_[0].el_);
+            let marker_a = jQuery('<div class="vjs-marker marker-a"></div>');
+            let marker_b = jQuery('<div class="vjs-marker marker-b"></div>');
+            p.append(marker_a);
+            p.append(marker_b);
 
-    function onMIDIMessage(message) {
+            this.video_object.on("timeupdate", () => {
+              if(this.Atime && this.Btime && this.ABisActive && !this.video_object.paused() && this.video_object.currentTime() > this.Btime){
+                this.video_object.currentTime(this.Atime);
+              }
+            })
+          })
+        }
+      });
+
+      //OpenCV.jsの実験
+
+      // let video = document.getElementById('video');
+      // let inputElement = document.getElementById('fileInput');
+      // inputElement.addEventListener('change', (e) => {
+      //     video.src = URL.createObjectURL(e.target.files[0]);
+      //     countFrames();
+      // }, false);
+      // function onOpenCvReady() {
+      //     document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+      // }
+
+      // function countFrames() {
+      //     let width = video.width;
+      //     let height = video.height;
+      //     let src = new cv.Mat(height, width, cv.CV_8UC4);
+      //     let dst = new cv.Mat(height, width, cv.CV_8UC1);
+
+      //     let loop = setInterval(() => {
+      //         try {
+      //             if(video.duration <= video.currentTime + (1.0/30)){
+      //                 console.log("end");
+      //                 clearInterval(loop);
+      //                 src.delete();
+      //                 dst.delete();
+      //                 return
+      //             }
+      //             video.currentTime += (1.0/30);
+      //             let cap = new cv.VideoCapture(video);
+      //             cap.read(src);
+      //             cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+      //             cv.imshow('canvasOutput', dst);
+      //         } catch(e){
+      //             console.log("error")
+      //             console.log(e);
+      //             clearInterval(loop);
+      //             src.delete();
+      //             dst.delete();
+      //         }
+      //     }, (1000.0/30))
+      // }
+
+      //WebMidiの実験
+
+      new Vue({
+        el: "#webmidi",
+        data: {
+          src: "",
+          midiOutputIsReady: false,
+          outputDevice: null,
+          count: 0,
+        },
+        computed: {},
+        methods: {
+          playScale() {
+            console.log("playScale");
+            let o = this.outputDevice;
+            let scale = [60, 62, 64, 65, 67, 69, 71, 72];
+            for (let i = 0; i < 8; i++) {
+              o.send(
+                [0x90, scale[i], 100],
+                window.performance.now() + 200 + 1000 * i
+              );
+              o.send(
+                [0x80, scale[i], 0],
+                window.performance.now() + 200 + 1000 * (i + 1)
+              );
+            }
+          },
+        },
+        mounted() {
+          navigator.requestMIDIAccess().then(
+            (midiAccess) => {
+              //成功
+              console.log("MIDI ready!");
+              // デバイスが 1台だけつながっている前提 ないとエラーになる
+              // const input = midiAccess.inputs.values().next();
+              // console.log(input.value.manufacturer);
+              // console.log(input.value.name);
+              // input.value.onmidimessage = onMIDIMessage;
+              try {
+                let output = midiAccess.outputs.values().next();
+                this.outputDevice = output.value;
+                console.log(this.outputDevice.name);
+                this.midiOutputIsReady = true;
+              } catch (e) {
+                console.log("cannot find MIDI device");
+              }
+            },
+            (msg) => {
+              //失敗
+              console.log("Failed to get MIDI access - " + msg);
+            }
+          );
+        },
+      });
+
+      function onMIDIMessage(message) {
         const data = message.data;
         console.log("MIDI data: ", data);
-    }
-
-    
-</script>
-<script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
-</body>
+      }
+    </script>
+    <script
+      async
+      src="opencv.js"
+      onload="onOpenCvReady();"
+      type="text/javascript"
+    ></script>
+  </body>
 </html>
