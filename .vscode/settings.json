@@ -64,5 +64,6 @@
         "stm32f1xx.h": "c",
         "usart.h": "c",
         "main.h": "c"
-    }
+    },
+    "cmake.sourceDirectory": "${workspaceFolder}/firmware"
 }

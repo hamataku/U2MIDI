@@ -48,14 +48,14 @@ else()
     message("Compile flags:\n\t${CMAKE_CXX_FLAGS}")
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "-mcpu=cortex-m3 -mthumb -march=armv7e-m  -specs=nosys.specs -specs=nano.specs -T ${CMAKE_SOURCE_DIR}/Uplight/STM32F103CBTx_FLASH.ld -lc -lm  -Wl,--gc-sections -u _printf_float -Wl,-Map=${CMAKE_PROJECT_NAME}.map -Wl,--print-memory-usage")
+set(CMAKE_EXE_LINKER_FLAGS "-mcpu=cortex-m3 -mthumb -march=armv7e-m  -specs=nosys.specs -specs=nano.specs -T ${CMAKE_SOURCE_DIR}/STM32F103CBTx_FLASH.ld -lc -lm  -Wl,--gc-sections -u _printf_float -Wl,-Map=${CMAKE_PROJECT_NAME}.map -Wl,--print-memory-usage")
 
-include_directories("inc" "Uplight/Core/Inc" "Uplight/Drivers/CMSIS/Device/ST/STM32F1xx/Include" "Uplight/Middlewares_MIDI/ST/STM32_USB_Device_Library/Class/USBMIDI/Inc" "Uplight/Middlewares_MIDI/ST/STM32_USB_Device_Library/Core/Inc" "Uplight/USB_DEVICE_MIDI/App" "Uplight/USB_DEVICE_MIDI/Target" "Uplight/Drivers/CMSIS/Include" "Uplight/Drivers/CMSIS/Device/ST/STM32F1xx/Include" "Uplight/Drivers/STM32F1xx_HAL_Driver/Inc" "Uplight/Drivers/STM32F1xx_HAL_Driver/Inc/Legacy")
+include_directories("inc" "Core/Inc" "Drivers/CMSIS/Device/ST/STM32F1xx/Include" "Middlewares_MIDI/ST/STM32_USB_Device_Library/Class/USBMIDI/Inc" "Middlewares_MIDI/ST/STM32_USB_Device_Library/Core/Inc" "USB_DEVICE_MIDI/App" "USB_DEVICE_MIDI/Target" "Drivers/CMSIS/Include" "Drivers/CMSIS/Device/ST/STM32F1xx/Include" "Drivers/STM32F1xx_HAL_Driver/Inc" "Drivers/STM32F1xx_HAL_Driver/Inc/Legacy")
 
 file(GLOB MAIN_SOURCE "src/*.cpp" "src/*.c")
-file(GLOB CUBEMX_SOURCE "Uplight/Core/Src/*.c"  "Uplight/*.s" "Uplight/Drivers/STM32F1xx_HAL_Driver/Src/*.c" "Uplight/Middlewares_MIDI/ST/STM32_USB_Device_Library/Class/USBMIDI/Src/*.c" "Uplight/Middlewares_MIDI/ST/STM32_USB_Device_Library/Core/Src/*.c" "Uplight/USB_DEVICE_MIDI/App/*.c" "Uplight/USB_DEVICE_MIDI/Target/*.c")
-# list(REMOVE_ITEM CUBEMX_SOURCE "${CMAKE_SOURCE_DIR}/Uplight/Core/Src/main.c")
-# list(REMOVE_ITEM CUBEMX_SOURCE "${CMAKE_SOURCE_DIR}/Uplight/Core/Src/stm32f4xx_it.c")
+file(GLOB CUBEMX_SOURCE "Core/Src/*.c"  "*.s" "Drivers/STM32F1xx_HAL_Driver/Src/*.c" "Middlewares_MIDI/ST/STM32_USB_Device_Library/Class/USBMIDI/Src/*.c" "Middlewares_MIDI/ST/STM32_USB_Device_Library/Core/Src/*.c" "USB_DEVICE_MIDI/App/*.c" "USB_DEVICE_MIDI/Target/*.c")
+# list(REMOVE_ITEM CUBEMX_SOURCE "${CMAKE_SOURCE_DIR}/Core/Src/main.c")
+# list(REMOVE_ITEM CUBEMX_SOURCE "${CMAKE_SOURCE_DIR}/Core/Src/stm32f4xx_it.c")
 
 add_executable(${PROJECT_NAME}.elf ${MAIN_SOURCE} ${CUBEMX_SOURCE})
 
@@ -64,11 +64,11 @@ add_custom_target(${PROJECT_NAME}.hex ALL
 
 if(EXISTS /proc/sys/fs/binfmt_misc/WSLInterop)
    # WINDOWS(WSL)
-   add_custom_target(write COMMAND make -j4 COMMAND /mnt/c/Program\ Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_Programmer_CLI.exe -c port=SWD -d ./${PROJECT_NAME}.elf -s -ob BOR_LEV=0)
+   add_custom_target(write COMMAND make -j4 COMMAND /mnt/c/Program\ Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_Programmer_CLI.exe -c port=SWD -d ./${PROJECT_NAME}.elf -s)
 elseif(EXISTS /Applications/STMicroelectronics)
    # MAC
-   add_custom_target(write COMMAND make -j4 COMMAND /Applications/STMicroelectronics/STM32Cube/STM32CubeProgrammer/STM32CubeProgrammer.app/Contents/MacOs/bin/STM32_Programmer_CLI -c port=SWD -d ./${PROJECT_NAME}.elf -s -ob BOR_LEV=0)
+   add_custom_target(write COMMAND make -j4 COMMAND /Applications/STMicroelectronics/STM32Cube/STM32CubeProgrammer/STM32CubeProgrammer.app/Contents/MacOs/bin/STM32_Programmer_CLI -c port=SWD -d ./${PROJECT_NAME}.elf -s)
 else()
    # Native LINUX
-   add_custom_target(write COMMAND make -j4 COMMAND $ENV{HOME}/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_Programmer_CLI -c port=SWD -d ./${PROJECT_NAME}.elf -s -ob BOR_LEV=0)
+   add_custom_target(write COMMAND make -j4 COMMAND $ENV{HOME}/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_Programmer_CLI -c port=SWD -d ./${PROJECT_NAME}.elf -s)
 endif()
