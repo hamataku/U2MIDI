@@ -14,6 +14,11 @@ void led_init()
     SET_BIT(SPI1->CR1, SPI_CR1_SPE);
     memset(led_data, 0, sizeof(led_data));
     HAL_TIM_Base_Start_IT(&htim2);
+    for (int i = 0; i < BAR_NUM * 12; i++) {
+        led_setnote(OFFSET * 12 + i, true);
+        HAL_Delay(5);
+        led_setnote(OFFSET * 12 + i, false);
+    }
 }
 
 void led_setnote(int16_t note, bool state)
