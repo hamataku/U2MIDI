@@ -33,18 +33,16 @@
         </div>
       </div>
 
-      <!-- <h2>OpenCV.jsのテスト</h2>
-<p id="status">OpenCV.js is loading...</p>
-<div>
-  <div class="inputoutput">
-    <video id="video" muted width="320" height="240"></video>
-    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
-  </div>
-  <div class="inputoutput">
-    <canvas id="canvasOutput" ></canvas>
-    <div class="caption">canvasOutput</div>
-  </div>
-</div> -->
+      <h2>OpenCV.jsのテスト</h2>
+      <p id="status">OpenCV.js is loading...</p>
+      <div class="inputoutput">
+        <video id="video" muted></video>
+        <div class="caption">input <input type="file" id="videoInput" name="file" /></div>
+      </div>
+      <div class="inputoutput">
+        <canvas id="canvasOutput" ></canvas>
+        <div class="caption">canvasOutput</div>
+      </div>
 
       <div id="webmidi">
         <h2>WebMIDI APIのテスト</h2>
@@ -69,11 +67,11 @@
     <script src="https://cdn.jsdelivr.net/npm/vue-js-toggle-button@1.3.2/dist/index.min.js"></script>
 
     <script src="./index.js"></script>
-    <!-- <script
+    <script
       async
       src="opencv.js"
       onload="onOpenCvReady();"
       type="text/javascript"
-    ></script> -->
+    ></script>
   </body>
 </html>

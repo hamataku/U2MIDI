@@ -178,45 +178,59 @@ new Vue({
 
 //OpenCV.jsの実験
 
-// let video = document.getElementById('video');
-// let inputElement = document.getElementById('fileInput');
-// inputElement.addEventListener('change', (e) => {
-//     video.src = URL.createObjectURL(e.target.files[0]);
-//     countFrames();
-// }, false);
-// function onOpenCvReady() {
-//     document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
-// }
+let video = document.getElementById('video');
+function handleCanPlayThrough() {
+  countFrames();
+  // `canplaythrough` イベントリスナーを削除。
+  video.removeEventListener('canplaythrough', handleCanPlayThrough);
+}
+video.addEventListener('canplaythrough', handleCanPlayThrough);
 
-// function countFrames() {
-//     let width = video.width;
-//     let height = video.height;
-//     let src = new cv.Mat(height, width, cv.CV_8UC4);
-//     let dst = new cv.Mat(height, width, cv.CV_8UC1);
+let inputElement = document.getElementById('videoInput');
+inputElement.addEventListener('change', (e) => {
+  video.src = URL.createObjectURL(e.target.files[0]);
+  video.width = 1280;
+  video.height = 720;
+  video.load();
+  video.play(); // chromeで動画を読み込んだ後にplayしないとvideocaptureが真っ暗になる。謎
+}, false);
 
-//     let loop = setInterval(() => {
-//         try {
-//             if(video.duration <= video.currentTime + (1.0/30)){
-//                 console.log("end");
-//                 clearInterval(loop);
-//                 src.delete();
-//                 dst.delete();
-//                 return
-//             }
-//             video.currentTime += (1.0/30);
-//             let cap = new cv.VideoCapture(video);
-//             cap.read(src);
-//             cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-//             cv.imshow('canvasOutput', dst);
-//         } catch(e){
-//             console.log("error")
-//             console.log(e);
-//             clearInterval(loop);
-//             src.delete();
-//             dst.delete();
-//         }
-//     }, (1000.0/30))
-// }
+function onOpenCvReady() {
+    document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+}
+
+function countFrames() {
+  let width = video.width;
+  let height = video.height;
+  let src = new cv.Mat(height, width, cv.CV_8UC4);
+  let mono = new cv.Mat(height, width, cv.CV_8UC1);
+
+  video.pause(); // ここでplayした動画を停止している
+  video.currentTime = 4;
+  let cap = new cv.VideoCapture(video);
+  cap.read(src);
+  cv.cvtColor(src, mono, cv.COLOR_RGBA2GRAY);
+  let start_row = src.rows/3*2;
+  let rect = new cv.Rect(0, start_row, src.cols, src.rows - start_row);
+  let dst = mono.roi(rect);
+  let color_dst = src.roi(rect);
+  
+  cv.threshold(dst, dst, 100, 255, cv.THRESH_BINARY);
+  cv.Canny(dst, dst, 100, 200, 3);
+  let lines = new cv.Mat();
+  cv.HoughLinesP(dst, lines, 1, Math.PI, 80, 30, 2);
+  console.log(lines.rows);
+  let color = new cv.Scalar(0, 255, 0, 255);
+  for (let i = 0; i < lines.rows; ++i)
+  {
+    let startPoint = new cv.Point(lines.data32S[i * 4], lines.data32S[i * 4 + 1]);
+    let endPoint = new cv.Point(lines.data32S[i * 4 + 2], lines.data32S[i * 4 + 3]);
+    cv.line(color_dst, startPoint, endPoint, color);
+  }
+  cv.imshow('canvasOutput', color_dst);
+
+  
+}
 
 //WebMidiの実験
 
