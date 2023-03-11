@@ -179,10 +179,10 @@ new Vue({
 //OpenCV.jsの実験
 
 let video = document.getElementById('video');
-function handleCanPlayThrough() {
-  countFrames();
-  // `canplaythrough` イベントリスナーを削除。
+function handleCanPlayThrough()
+{  
   video.removeEventListener('canplaythrough', handleCanPlayThrough);
+  getKeyPosition();
 }
 video.addEventListener('canplaythrough', handleCanPlayThrough);
 
@@ -199,7 +199,7 @@ function onOpenCvReady() {
     document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
 }
 
-function countFrames() {
+function getKeyPosition() {
   let width = video.width;
   let height = video.height;
   let src = new cv.Mat(height, width, cv.CV_8UC4);
@@ -219,17 +219,64 @@ function countFrames() {
   cv.Canny(dst, dst, 100, 200, 3);
   let lines = new cv.Mat();
   cv.HoughLinesP(dst, lines, 1, Math.PI, 80, 30, 2);
-  console.log(lines.rows);
-  let color = new cv.Scalar(0, 255, 0, 255);
+
+  // sort position of lines
+  let pos_list = [];
   for (let i = 0; i < lines.rows; ++i)
   {
-    let startPoint = new cv.Point(lines.data32S[i * 4], lines.data32S[i * 4 + 1]);
-    let endPoint = new cv.Point(lines.data32S[i * 4 + 2], lines.data32S[i * 4 + 3]);
+    pos_list.push([lines.data32S[i * 4], lines.data32S[i * 4 + 1]]);
+  }
+  pos_list.sort(function (a, b) { return (a[0] - b[0]); });
+
+  // thin out the lines
+  for (let i = 0; i < pos_list.length - 1; ++i)
+  {
+    if (Math.abs(pos_list[i][0] - pos_list[i + 1][0]) < 5) {
+      pos_list[i + 1][0] = (pos_list[i][0] + pos_list[i + 1][0]) / 2;
+      pos_list[i + 1][1] = Math.max(pos_list[i][1], pos_list[i + 1][1]);
+      pos_list.splice(i, 1);
+    }
+  }
+
+  // detect first long line between B and C
+  let threshold = dst.rows - 40;
+  let octave = 3;
+  let standard = 0;
+  for (let i = 0; i < pos_list.length - 13; ++i)
+  {
+    if (pos_list[i][1] > threshold && pos_list[i + 5][1] > threshold && pos_list[i + 12][1] > threshold) {
+      standard = i % 12 + 1 - octave * 12;
+      console.log("standard: ", standard);
+      break;
+    }
+  }
+
+  // make key_list
+  let key_list = [];
+  for (let i = 0; i < pos_list.length + 1; ++i)
+  {
+    if (i == 0) {
+      key_list.push([Math.floor(pos_list[i][0] / 2), i - standard]);
+    } else if (i == pos_list.length) {
+      key_list.push([Math.floor((pos_list[i - 1][0] + dst.cols) / 2), i - standard]);
+    } else {
+      key_list.push([Math.floor((pos_list[i][0] + pos_list[i - 1][0]) / 2), i - standard]);
+    }
+  }
+
+  console.log(key_list);
+  
+  // draw lines
+  let color = new cv.Scalar(0, 255, 0, 255);
+  for (let i = 0; i < pos_list.length; ++i)
+  {
+    let startPoint = new cv.Point(pos_list[i][0], 0);
+    let endPoint = new cv.Point(pos_list[i][0], pos_list[i][1]);
     cv.line(color_dst, startPoint, endPoint, color);
   }
   cv.imshow('canvasOutput', color_dst);
 
-  
+  return key_list;
 }
 
 //WebMidiの実験
