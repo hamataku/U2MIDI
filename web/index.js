@@ -5,6 +5,7 @@ new Vue({
   el: "#app",
   data: {
     video_object: null,
+    video_analysis: null,
     ABisActive: false,
     video_length: null,
     Atime: null,
@@ -36,6 +37,86 @@ new Vue({
       });
       this.Atime = null;
       this.Btime = null;
+
+      this.video_analysis = document.createElement('video');
+      this.video_analysis.src = fileURL;
+      this.video_analysis.width = 1280;
+      this.video_analysis.height = 720;
+      this.video_analysis.load();
+      this.video_analysis.play(); // chromeで動画を読み込んだ後にplayしないとvideocaptureが真っ暗になる。謎
+      this.video_analysis.addEventListener('canplaythrough', this.getKeyPosition);
+    },
+    getKeyPosition() {
+      this.video_analysis.removeEventListener('canplaythrough', this.getKeyPosition);
+      let width = this.video_analysis.width;
+      let height = this.video_analysis.height;
+      let src = new cv.Mat(height, width, cv.CV_8UC4);
+      let mono = new cv.Mat(height, width, cv.CV_8UC1);
+
+      this.video_analysis.pause(); // ここでplayした動画を停止している
+      let cap = new cv.VideoCapture(this.video_analysis);
+      cap.read(src);
+      cv.cvtColor(src, mono, cv.COLOR_RGBA2GRAY);
+      let start_row = src.rows/3*2;
+      let rect = new cv.Rect(0, start_row, src.cols, src.rows - start_row);
+      let dst = mono.roi(rect);
+      let color_dst = src.roi(rect);
+      
+      cv.threshold(dst, dst, 100, 255, cv.THRESH_BINARY);
+      cv.Canny(dst, dst, 100, 200, 3);
+      let lines = new cv.Mat();
+      cv.HoughLinesP(dst, lines, 1, Math.PI, 80, 30, 2);
+
+      // sort position of lines
+      let pos_list = [];
+      for (let i = 0; i < lines.rows; ++i)
+      {
+        pos_list.push([lines.data32S[i * 4], lines.data32S[i * 4 + 1]]);
+      }
+      pos_list.sort(function (a, b) { return (a[0] - b[0]); });
+
+      // thin out the lines
+      for (let i = 0; i < pos_list.length - 1; ++i)
+      {
+        if (Math.abs(pos_list[i][0] - pos_list[i + 1][0]) < 5) {
+          pos_list[i + 1][0] = (pos_list[i][0] + pos_list[i + 1][0]) / 2;
+          pos_list[i + 1][1] = Math.max(pos_list[i][1], pos_list[i + 1][1]);
+          pos_list.splice(i, 1);
+        }
+      }
+
+      // detect first long line between B and C
+      let threshold = dst.rows - 40;
+      let octave = 3;
+      let standard = 0;
+      for (let i = 0; i < pos_list.length - 13; ++i)
+      {
+        if (pos_list[i][1] > threshold && pos_list[i + 5][1] > threshold && pos_list[i + 12][1] > threshold) {
+          standard = i % 12 + 1 - octave * 12;
+          console.log("standard: ", standard);
+          break;
+        }
+      }
+
+      // make key_list
+      let key_list = [];
+      for (let i = 0; i < pos_list.length + 1; ++i)
+      {
+        if (i == 0) {
+          key_list.push([Math.floor(pos_list[i][0] / 2), i - standard]);
+        } else if (i == pos_list.length) {
+          key_list.push([Math.floor((pos_list[i - 1][0] + dst.cols) / 2), i - standard]);
+        } else {
+          key_list.push([Math.floor((pos_list[i][0] + pos_list[i - 1][0]) / 2), i - standard]);
+        }
+      }
+
+      console.log(key_list);
+      
+      src.delete();
+      mono.delete();
+      dst.delete();
+      color_dst.delete();
     },
     setA() {
       let now = this.video_object.currentTime();
@@ -76,8 +157,7 @@ new Vue({
           }
 
           //MIDI信号送信の処理
-          while(this_.score_position < this_.score.length && this_.score[this_.score_position][0] < now){
-            
+          while(this_.score_position < this_.score.length && this_.score[this_.score_position][0] < now){    
               let current_note = this_.score[this_.score_position];
               //this.outputDevice.send([current_note[2] ? 0x90 : 0x80, current_note[1], 127]);
               console.log(current_note[1]);
@@ -126,6 +206,8 @@ new Vue({
       p.append(marker_b);
 
       this.startLoop();
+
+
 
     //   this.video_object.on("timeupdate", () => {
 
@@ -177,108 +259,9 @@ new Vue({
 });
 
 //OpenCV.jsの実験
-
-let video = document.getElementById('video');
-function handleCanPlayThrough()
-{  
-  video.removeEventListener('canplaythrough', handleCanPlayThrough);
-  getKeyPosition();
-}
-video.addEventListener('canplaythrough', handleCanPlayThrough);
-
-let inputElement = document.getElementById('videoInput');
-inputElement.addEventListener('change', (e) => {
-  video.src = URL.createObjectURL(e.target.files[0]);
-  video.width = 1280;
-  video.height = 720;
-  video.load();
-  video.play(); // chromeで動画を読み込んだ後にplayしないとvideocaptureが真っ暗になる。謎
-}, false);
-
 function onOpenCvReady() {
     document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
 }
-
-function getKeyPosition() {
-  let width = video.width;
-  let height = video.height;
-  let src = new cv.Mat(height, width, cv.CV_8UC4);
-  let mono = new cv.Mat(height, width, cv.CV_8UC1);
-
-  video.pause(); // ここでplayした動画を停止している
-  video.currentTime = 4;
-  let cap = new cv.VideoCapture(video);
-  cap.read(src);
-  cv.cvtColor(src, mono, cv.COLOR_RGBA2GRAY);
-  let start_row = src.rows/3*2;
-  let rect = new cv.Rect(0, start_row, src.cols, src.rows - start_row);
-  let dst = mono.roi(rect);
-  let color_dst = src.roi(rect);
-  
-  cv.threshold(dst, dst, 100, 255, cv.THRESH_BINARY);
-  cv.Canny(dst, dst, 100, 200, 3);
-  let lines = new cv.Mat();
-  cv.HoughLinesP(dst, lines, 1, Math.PI, 80, 30, 2);
-
-  // sort position of lines
-  let pos_list = [];
-  for (let i = 0; i < lines.rows; ++i)
-  {
-    pos_list.push([lines.data32S[i * 4], lines.data32S[i * 4 + 1]]);
-  }
-  pos_list.sort(function (a, b) { return (a[0] - b[0]); });
-
-  // thin out the lines
-  for (let i = 0; i < pos_list.length - 1; ++i)
-  {
-    if (Math.abs(pos_list[i][0] - pos_list[i + 1][0]) < 5) {
-      pos_list[i + 1][0] = (pos_list[i][0] + pos_list[i + 1][0]) / 2;
-      pos_list[i + 1][1] = Math.max(pos_list[i][1], pos_list[i + 1][1]);
-      pos_list.splice(i, 1);
-    }
-  }
-
-  // detect first long line between B and C
-  let threshold = dst.rows - 40;
-  let octave = 3;
-  let standard = 0;
-  for (let i = 0; i < pos_list.length - 13; ++i)
-  {
-    if (pos_list[i][1] > threshold && pos_list[i + 5][1] > threshold && pos_list[i + 12][1] > threshold) {
-      standard = i % 12 + 1 - octave * 12;
-      console.log("standard: ", standard);
-      break;
-    }
-  }
-
-  // make key_list
-  let key_list = [];
-  for (let i = 0; i < pos_list.length + 1; ++i)
-  {
-    if (i == 0) {
-      key_list.push([Math.floor(pos_list[i][0] / 2), i - standard]);
-    } else if (i == pos_list.length) {
-      key_list.push([Math.floor((pos_list[i - 1][0] + dst.cols) / 2), i - standard]);
-    } else {
-      key_list.push([Math.floor((pos_list[i][0] + pos_list[i - 1][0]) / 2), i - standard]);
-    }
-  }
-
-  console.log(key_list);
-  
-  // draw lines
-  let color = new cv.Scalar(0, 255, 0, 255);
-  for (let i = 0; i < pos_list.length; ++i)
-  {
-    let startPoint = new cv.Point(pos_list[i][0], 0);
-    let endPoint = new cv.Point(pos_list[i][0], pos_list[i][1]);
-    cv.line(color_dst, startPoint, endPoint, color);
-  }
-  cv.imshow('canvasOutput', color_dst);
-
-  return key_list;
-}
-
 //WebMidiの実験
 
 // new Vue({
