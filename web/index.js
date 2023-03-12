@@ -12,9 +12,9 @@ new Vue({
     Btime: null,
     midiOutputIsReady: false,
     outputDevice: null,
-    score: [
-        [3, 60, 1], [4, 60, 0], [4, 62, 1], [5, 62, 0], [5, 64, 1], [6, 64, 0]
-    ],
+    key_list: [],
+    key_default_color: [],
+    key_note_state: [],
     score_position: null //次にscoreの何番目を判定するか nullなら冒頭から探す
   },
   computed: {
@@ -64,8 +64,11 @@ new Vue({
       
       cv.threshold(dst, dst, 100, 255, cv.THRESH_BINARY);
       cv.Canny(dst, dst, 100, 200, 3);
+
+      cv.imshow('canvasOutput1', dst);
+
       let lines = new cv.Mat();
-      cv.HoughLinesP(dst, lines, 1, Math.PI, 80, 30, 2);
+      cv.HoughLinesP(dst, lines, 2, Math.PI, 130, 30, 2);
 
       // sort position of lines
       let pos_list = [];
@@ -99,19 +102,36 @@ new Vue({
       }
 
       // make key_list
-      let key_list = [];
       for (let i = 0; i < pos_list.length + 1; ++i)
       {
         if (i == 0) {
-          key_list.push([Math.floor(pos_list[i][0] / 2), i - standard]);
+          this.key_list.push([Math.floor(pos_list[i][0] / 2), i - standard]);
         } else if (i == pos_list.length) {
-          key_list.push([Math.floor((pos_list[i - 1][0] + dst.cols) / 2), i - standard]);
+          this.key_list.push([Math.floor((pos_list[i - 1][0] + dst.cols) / 2), i - standard]);
         } else {
-          key_list.push([Math.floor((pos_list[i][0] + pos_list[i - 1][0]) / 2), i - standard]);
+          this.key_list.push([Math.floor((pos_list[i][0] + pos_list[i - 1][0]) / 2), i - standard]);
         }
       }
 
-      console.log(key_list);
+      // get key_default_color
+      for (let i = 0; i < this.key_list.length; ++i)
+      {
+        let x = this.key_list[i][0];
+        let y = 100;
+        let color = Math.floor((color_dst.ucharPtr(y, x)[0] + color_dst.ucharPtr(y, x)[1] + color_dst.ucharPtr(y, x)[2]) / 3);
+        this.key_default_color.push(color);
+      }
+
+      console.log(this.key_list);
+
+      let color = new cv.Scalar(0, 255, 0, 255);
+      for (let i = 0; i < pos_list.length; ++i)
+      {
+        let startPoint = new cv.Point(pos_list[i][0], 0);
+        let endPoint = new cv.Point(pos_list[i][0], pos_list[i][1]);
+        cv.line(color_dst, startPoint, endPoint, color);
+      }
+      cv.imshow('canvasOutput2', color_dst);
       
       src.delete();
       mono.delete();
@@ -137,31 +157,35 @@ new Vue({
     },
     startLoop(){
       let this_ = this;
+      let video_body = document.getElementById("my-player_html5_api");
+      let canvas = document.createElement('canvas');
+      canvas.width = 1280;
+      canvas.height = 720;
+      var ctx = canvas.getContext('2d',{willReadFrequently: true});
       (function loop(){
-
         //再生中じゃなければ何もしない
         if(this_.video_object.paused() || this_.video_object.seeking()){
           this_.score_position = null;
         } else {
-
           let now = this_.video_object.currentTime();
 
-          // nullになったprevious_timeとscore_positionを設定する処理
-          if(this_.score_position == null){
-            for(let i=0; i<this_.score.length; i++){
-              if(this_.score[i][0] > now){
-                this_.score_position = i;
-                break;
+          ctx.drawImage(video_body, 0, 0);
+          for (let i = 0; i < this_.key_list.length; ++i) {
+            var imageData = ctx.getImageData(this_.key_list[i][0], 630, 1, 1);
+            let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
+            if (Math.abs(color - this_.key_default_color[i]) > 30) {
+              if (!this_.key_note_state[i]){
+                this_.key_note_state[i] = true;
+                this_.outputDevice.send([0x90, this_.key_list[i][1], 127]);
+                console.log("Note on: ", this_.key_list[i][1]);
+              }
+            } else {
+              if (this_.key_note_state[i]){
+                this_.key_note_state[i] = false;
+                this_.outputDevice.send([0x80, this_.key_list[i][1], 127]);
+                console.log("Note off: ", this_.key_list[i][1]);
               }
             }
-          }
-
-          //MIDI信号送信の処理
-          while(this_.score_position < this_.score.length && this_.score[this_.score_position][0] < now){    
-              let current_note = this_.score[this_.score_position];
-              //this.outputDevice.send([current_note[2] ? 0x90 : 0x80, current_note[1], 127]);
-              console.log(current_note[1]);
-              this_.score_position += 1;
           }
 
           //AB再生の処理
@@ -195,7 +219,9 @@ new Vue({
     },
   },
   mounted() {
-    this.video_object = videojs("my-player");
+    this.video_object = videojs("my-player", {
+      playbackRates: [0.2, 0.5, 1, 1.5, 2]
+    });
     this.video_object.ready(() => {
       let p = jQuery(
         this.video_object.controlBar.progressControl.children_[0].el_
