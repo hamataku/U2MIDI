@@ -6,7 +6,6 @@
 #include <string.h>
 
 #define BAR_NUM 8
-#define OFFSET 4
 uint16_t led_data[BAR_NUM];
 
 void led_init()
@@ -15,15 +14,14 @@ void led_init()
     memset(led_data, 0, sizeof(led_data));
     HAL_TIM_Base_Start_IT(&htim2);
     for (int i = 0; i < BAR_NUM * 12; i++) {
-        led_setnote(OFFSET * 12 + i, true);
+        led_setnote(i, true);
         HAL_Delay(5);
-        led_setnote(OFFSET * 12 + i, false);
+        led_setnote(i, false);
     }
 }
 
 void led_setnote(int16_t note, bool state)
 {
-    note = note - OFFSET * 12;
     if (note < 0 || note > BAR_NUM * 12 - 1) {
         return;
     }
