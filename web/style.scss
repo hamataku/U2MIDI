@@ -1,0 +1,25 @@
+$primary-color: #1c504e;
+
+.inputoutput {
+    .caption {
+        color: $primary-color;
+    }
+}
+
+.vjs-marker {
+  position:absolute;
+  background:red;
+  width:5px;
+  height:110%;
+  top:-5%;
+  z-index:30;
+  margin-left:-3px;
+}
+
+.marker-a {
+    left: v-bind(Apos);
+}
+
+.marker-b {
+    left: v-bind(Bpos);
+}
