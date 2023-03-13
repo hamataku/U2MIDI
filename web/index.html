@@ -22,11 +22,18 @@
           <source src="./mov_hts-samp001.mp4" type="video/mp4" />
         </video>
         <br />
-        <!-- <button @click="switchABMode">{{ ABisActive ? "AB再生を無効化" : "AB再生を有効化"}}</button> -->
-        <toggle-button v-model="ABisActive"></toggle-button>
-        <button @click="restart">＜</button>
-        <button @click="setA">A</button>
-        <button @click="setB">B</button>
+        <div>
+          <toggle-button v-model="ABisActive"></toggle-button>
+          <button @click="restart">＜</button>
+          <button @click="setA">A</button>
+          <button @click="setB">B</button>
+        </div>
+        <div>
+          octave
+          <button @click="octaveUp">+</button>
+          {{ octave }}
+          <button @click="octaveDown">-</button>
+        </div>
         <div class="caption">
           imageSrc
           <input type="file" id="fileInput" name="file" @change="setSrc" />

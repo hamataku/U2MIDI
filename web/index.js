@@ -18,6 +18,7 @@ new Vue({
     key_list: [],
     key_default_color: [],
     key_note_state: [],
+    octave: 5,
   },
   computed: {
     Apos: function () {
@@ -92,12 +93,11 @@ new Vue({
 
       // detect first long line between B and C
       let threshold = dst.rows - 40;
-      let octave = 3;
       let standard = 0;
       for (let i = 0; i < pos_list.length - 13; ++i)
       {
         if (pos_list[i][1] > threshold && pos_list[i + 5][1] > threshold && pos_list[i + 12][1] > threshold) {
-          standard = i % 12 + 1 - octave * 12;
+          standard = i % 12 + 1 - 3 * 12;
           console.log("standard: ", standard);
           break;
         }
@@ -154,8 +154,33 @@ new Vue({
       }
       this.Btime = now;
     },
+    octaveUp() {
+      this.octave += 1;
+      if (this.octave > 9) {
+        this.octave = 9;
+      }
+    },
+    octaveDown() {
+      this.octave -= 1;
+      if (this.octave < 0) {
+        this.octave = 0;
+      }
+    },
     restart() {
       this.video_object.currentTime(0);
+    },
+    uplightSend(note, state)
+    {
+      if (note < 0 || note > 127) {
+        return;
+      }
+      if (this.midiOutputIsReady) {
+        if(state){
+          this.outputDevice.send([0x90, note, 127]);
+        } else {
+          this.outputDevice.send([0x80, note, 0]);
+        }
+      }
     },
     startLoop(){
       let this_ = this;
@@ -177,17 +202,13 @@ new Vue({
             if (Math.abs(color - this_.key_default_color[i]) > 30) {
               if (!this_.key_note_state[i]){
                 this_.key_note_state[i] = true;
-                if (this_.midiOutputIsReady) {
-                  this_.outputDevice.send([0x90, this_.key_list[i][1], 127]);
-                }
+                this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
                 console.log("Note on: ", this_.key_list[i][1]);
               }
             } else {
               if (this_.key_note_state[i]){
                 this_.key_note_state[i] = false;
-                if (this_.midiOutputIsReady) {
-                  this_.outputDevice.send([0x80, this_.key_list[i][1], 127]);
-                }
+                this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, false);
                 console.log("Note off: ", this_.key_list[i][1]);
               }
             }
@@ -218,6 +239,9 @@ new Vue({
               this.outputDevice = o.value;
               console.log(this.outputDevice.name);
               this.midiOutputIsReady = true;
+              for (let i = 0; i < 128; ++i) {
+                this.uplightSend(i, false);
+              }
               clearInterval(this.midiObserverId);
               return;
             }
