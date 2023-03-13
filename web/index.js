@@ -18,7 +18,7 @@ new Vue({
     key_list: [],
     key_default_color: [],
     key_note_state: [],
-    octave: 5,
+    octave: 4,
   },
   computed: {
     Apos: function () {
@@ -118,10 +118,12 @@ new Vue({
       // get key_default_color
       for (let i = 0; i < this.key_list.length; ++i)
       {
-        let x = this.key_list[i][0];
-        let y = 100;
-        let color = Math.floor((color_dst.ucharPtr(y, x)[0] + color_dst.ucharPtr(y, x)[1] + color_dst.ucharPtr(y, x)[2]) / 3);
-        this.key_default_color.push(color);
+        let rem = this.key_list[i][1] % 12;
+        if (rem == 0 || rem == 2 || rem == 4 || rem == 5 || rem == 7 || rem == 9 || rem == 11) {
+          this.key_default_color.push(255); // 白鍵
+        } else {
+          this.key_default_color.push(0); // 黒鍵
+        }
       }
 
       console.log(this.key_list);
@@ -210,7 +212,7 @@ new Vue({
               if (!this_.key_note_state[i]){
                 this_.key_note_state[i] = true;
                 this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
-                console.log("Note on: ", this_.key_list[i][1]);
+                console.log("Note on:  ", this_.key_list[i][1]);
               }
             } else {
               if (this_.key_note_state[i]){
