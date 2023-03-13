@@ -208,7 +208,7 @@ new Vue({
           for (let i = 0; i < this_.key_list.length; ++i) {
             var imageData = ctx.getImageData(this_.key_list[i][0], 630, 1, 1);
             let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
-            if (Math.abs(color - this_.key_default_color[i]) > 30) {
+            if (Math.abs(color - this_.key_default_color[i]) > 50) {
               if (!this_.key_note_state[i]){
                 this_.key_note_state[i] = true;
                 this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
