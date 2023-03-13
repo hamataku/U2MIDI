@@ -37,17 +37,6 @@
       <p id="status">OpenCV.js is loading...</p>
       <canvas id="canvasOutput1" ></canvas>
       <canvas id="canvasOutput2" ></canvas>
-
-      <div id="webmidi">
-        <h2>WebMIDI APIのテスト</h2>
-        <p>
-          {{ midiOutputIsReady ?
-          "ボタンを押すと「ドレミファソラシド」が鳴ります" :
-          "MIDIデバイスがありません" }}
-        </p>
-        <button @click="playScale()">鳴らす</button>
-      </div>
-      
     </div>
 
     <!--jQueryはマーカー挿入にのみ用いる-->
