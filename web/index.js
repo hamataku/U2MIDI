@@ -159,11 +159,18 @@ new Vue({
       if (this.octave > 9) {
         this.octave = 9;
       }
+      this.clearAll();
     },
     octaveDown() {
       this.octave -= 1;
       if (this.octave < 0) {
         this.octave = 0;
+      }
+      this.clearAll();
+    },
+    clearAll() {
+      for (let i = 0; i < 128; ++i) {
+        this.uplightSend(i, false);
       }
     },
     restart() {
@@ -239,9 +246,7 @@ new Vue({
               this.outputDevice = o.value;
               console.log(this.outputDevice.name);
               this.midiOutputIsReady = true;
-              for (let i = 0; i < 128; ++i) {
-                this.uplightSend(i, false);
-              }
+              this.clearAll();
               clearInterval(this.midiObserverId);
               return;
             }
