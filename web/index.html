@@ -2,13 +2,20 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <link href="http://fonts.googleapis.com/earlyaccess/notosansjp.css" />
     <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
     <link href="./style.css" rel="stylesheet" />
   </head>
   <body>
     <div id="app">
-      <div id="video_test">
-        <h2>Videoの再生制御のテスト</h2>
+      <div id="video_test" class="text-center">
+        <h2>動画</h2>
         <!-- <video id="my-player" :src="src" width="320" height="240" controls></video> -->
         <video
           id="my-player"
@@ -18,39 +25,56 @@
           data-setup="{}"
           width="640"
           height="480"
-        >
-        </video>
+        ></video>
+        <div class="upload-area d-flex flex-column align-items-center justify-content-center" @dragover.prevent="" @dragleave="" @drop.stop.prevent="(e) => setSrc(e.dataTransfer.files[0])">
+          ここに動画をドラッグ＆ドロップ
+          <br>
+          or
+          <input type="file" id="fileInput" name="file" @change="(e) => setSrc(e.target.files[0])" />
+        </div>
         <br />
-        <div>
+        <div class="p-2">
+          <h4>AB再生</h3>
           <toggle-button v-model="ABisActive"></toggle-button>
-          <button @click="restart">＜</button>
-          <button @click="setA">A</button>
-          <button @click="setB">B</button>
+          <br />
+          <button @click="restart" class="btn btn-primary">＜</button>
+          <button @click="setA" class="btn btn-dark">A</button>
+          <button @click="setB" class="btn btn-dark">B</button>
+          <button @click="toend" class="btn btn-primary">＞</button>
         </div>
-        <div>
-          octave
-          <button @click="octaveUp">+</button>
-          {{ octave }}
-          <button @click="octaveDown">-</button>
-        </div>
-        <div class="caption">
-          imageSrc
-          <input type="file" id="fileInput" name="file" @change="setSrc" />
-        </div>
+        
+          <div class="p-2">
+            <h4>オクターブ調整</h2>
+            <button @click="octaveDown" class="btn btn-primary px-2">ー</button>
+            <span class="font-weight-normal px-2">{{octave}}</span>
+            <button @click="octaveUp" class="btn btn-primary px-2">＋</button>
+          </div>
       </div>
 
       <h2>鍵盤解析結果</h2>
       <p id="status">OpenCV.js is loading...</p>
-      <canvas id="canvasOutput1" ></canvas>
-      <canvas id="canvasOutput2" ></canvas>
+      <canvas id="canvasOutput1"></canvas>
+      <canvas id="canvasOutput2"></canvas>
     </div>
 
-    <!--jQueryはマーカー挿入にのみ用いる-->
+    <!--jQueryはマーカー挿入とbootstrapにのみ用いる-->
     <script
-      src="https://code.jquery.com/jquery-3.6.3.js"
-      integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM="
+      src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+      integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
       crossorigin="anonymous"
     ></script>
+    <!--bootstrapに必要-->
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+      crossorigin="anonymous"
+    ></script>
+
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue-js-toggle-button@1.3.2/dist/index.min.js"></script>

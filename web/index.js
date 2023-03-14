@@ -8,6 +8,7 @@ new Vue({
   data: {
     video_object: null,
     video_analysis: null,
+    video_src_is_set: false,
     ABisActive: false,
     video_length: null,
     Atime: null,
@@ -29,12 +30,18 @@ new Vue({
     },
   },
   methods: {
-    setSrc(e) {
-      let file = e.target.files[0];
+    check(text){
+      console.log(text);
+    },
+    setSrc(file) {
+      console.log("called");
+      //let file = e.target.files[0];
+      //let file = e.dataTransfer.files[0];
       let fileURL = URL.createObjectURL(file);
       let fileType = file.type;
       this.video_object.src({ type: fileType, src: fileURL });
       this.video_object.load();
+      this.video_src_is_set = true;
       this.video_object.on("loadeddata", () => {
         this.video_length = this.video_object.duration();
       });
@@ -177,6 +184,9 @@ new Vue({
     },
     restart() {
       this.video_object.currentTime(0);
+    },
+    toend(){
+      this.video_object.currentTime(this.video_length);
     },
     uplightSend(note, state)
     {
