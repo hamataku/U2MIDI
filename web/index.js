@@ -278,13 +278,17 @@ new Vue({
     Atime: {
       immediate: true,
       handler: function () {
-        $(".marker-a").css("left", this.Apos);
+        if (this.video_src_is_set) {
+          document.querySelectorAll('.marker-a')[0].style.left = this.Apos;
+        }
       },
     },
     Btime: {
       immediate: true,
       handler: function () {
-        $(".marker-b").css("left", this.Bpos);
+        if (this.video_src_is_set) {
+          document.querySelectorAll('.marker-b')[0].style.left = this.Bpos;
+        }
       },
     },
   },
@@ -293,13 +297,13 @@ new Vue({
       playbackRates: [0.2, 0.5, 1, 1.5, 2]
     });
     this.video_object.ready(() => {
-      let p = jQuery(
-        this.video_object.controlBar.progressControl.children_[0].el_
-      );
-      let marker_a = jQuery('<div class="vjs-marker marker-a"></div>');
-      let marker_b = jQuery('<div class="vjs-marker marker-b"></div>');
-      p.append(marker_a);
-      p.append(marker_b);
+      let p = document.querySelectorAll('.vjs-progress-holder')[0];
+      let marker_a = document.createElement('div');
+      marker_a.className = 'vjs-marker marker-a';
+      let marker_b = document.createElement('div');
+      marker_b.className = 'vjs-marker marker-b';
+      p.appendChild(marker_a);
+      p.appendChild(marker_b);
 
       this.startLoop();      
     });
