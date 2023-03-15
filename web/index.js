@@ -1,21 +1,25 @@
 //Videoの実験
 Vue.use(window["vue-js-toggle-button"].default);
 
+let opencvReady = false;
+
 new Vue({
   el: "#app",
   data: {
     video_object: null,
     video_analysis: null,
+    video_src_is_set: false,
     ABisActive: false,
     video_length: null,
     Atime: null,
     Btime: null,
     midiOutputIsReady: false,
     outputDevice: null,
+    midiObserverId: null,
     key_list: [],
     key_default_color: [],
     key_note_state: [],
-    score_position: null //次にscoreの何番目を判定するか nullなら冒頭から探す
+    octave: 4,
   },
   computed: {
     Apos: function () {
@@ -26,12 +30,18 @@ new Vue({
     },
   },
   methods: {
-    setSrc(e) {
-      let file = e.target.files[0];
+    check(text){
+      console.log(text);
+    },
+    setSrc(file) {
+      console.log("called");
+      //let file = e.target.files[0];
+      //let file = e.dataTransfer.files[0];
       let fileURL = URL.createObjectURL(file);
       let fileType = file.type;
       this.video_object.src({ type: fileType, src: fileURL });
       this.video_object.load();
+      this.video_src_is_set = true;
       this.video_object.on("loadeddata", () => {
         this.video_length = this.video_object.duration();
       });
@@ -90,12 +100,11 @@ new Vue({
 
       // detect first long line between B and C
       let threshold = dst.rows - 40;
-      let octave = 3;
       let standard = 0;
       for (let i = 0; i < pos_list.length - 13; ++i)
       {
         if (pos_list[i][1] > threshold && pos_list[i + 5][1] > threshold && pos_list[i + 12][1] > threshold) {
-          standard = i % 12 + 1 - octave * 12;
+          standard = i % 12 + 1 - 3 * 12;
           console.log("standard: ", standard);
           break;
         }
@@ -116,10 +125,12 @@ new Vue({
       // get key_default_color
       for (let i = 0; i < this.key_list.length; ++i)
       {
-        let x = this.key_list[i][0];
-        let y = 100;
-        let color = Math.floor((color_dst.ucharPtr(y, x)[0] + color_dst.ucharPtr(y, x)[1] + color_dst.ucharPtr(y, x)[2]) / 3);
-        this.key_default_color.push(color);
+        let rem = this.key_list[i][1] % 12;
+        if (rem == 0 || rem == 2 || rem == 4 || rem == 5 || rem == 7 || rem == 9 || rem == 11) {
+          this.key_default_color.push(255); // 白鍵
+        } else {
+          this.key_default_color.push(0); // 黒鍵
+        }
       }
 
       console.log(this.key_list);
@@ -152,8 +163,43 @@ new Vue({
       }
       this.Btime = now;
     },
+    octaveUp() {
+      this.octave += 1;
+      if (this.octave > 9) {
+        this.octave = 9;
+      }
+      this.clearAll();
+    },
+    octaveDown() {
+      this.octave -= 1;
+      if (this.octave < 0) {
+        this.octave = 0;
+      }
+      this.clearAll();
+    },
+    clearAll() {
+      for (let i = 0; i < 128; ++i) {
+        this.uplightSend(i, false);
+      }
+    },
     restart() {
       this.video_object.currentTime(0);
+    },
+    toend(){
+      this.video_object.currentTime(this.video_length);
+    },
+    uplightSend(note, state)
+    {
+      if (note < 0 || note > 127) {
+        return;
+      }
+      if (this.midiOutputIsReady) {
+        if(state){
+          this.outputDevice.send([0x90, note, 127]);
+        } else {
+          this.outputDevice.send([0x80, note, 0]);
+        }
+      }
     },
     startLoop(){
       let this_ = this;
@@ -165,7 +211,6 @@ new Vue({
       (function loop(){
         //再生中じゃなければ何もしない
         if(this_.video_object.paused() || this_.video_object.seeking()){
-          this_.score_position = null;
         } else {
           let now = this_.video_object.currentTime();
 
@@ -173,16 +218,16 @@ new Vue({
           for (let i = 0; i < this_.key_list.length; ++i) {
             var imageData = ctx.getImageData(this_.key_list[i][0], 630, 1, 1);
             let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
-            if (Math.abs(color - this_.key_default_color[i]) > 30) {
+            if (Math.abs(color - this_.key_default_color[i]) > 50) {
               if (!this_.key_note_state[i]){
                 this_.key_note_state[i] = true;
-                this_.outputDevice.send([0x90, this_.key_list[i][1], 127]);
-                console.log("Note on: ", this_.key_list[i][1]);
+                this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
+                console.log("Note on:  ", this_.key_list[i][1]);
               }
             } else {
               if (this_.key_note_state[i]){
                 this_.key_note_state[i] = false;
-                this_.outputDevice.send([0x80, this_.key_list[i][1], 127]);
+                this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, false);
                 console.log("Note off: ", this_.key_list[i][1]);
               }
             }
@@ -201,20 +246,49 @@ new Vue({
         }
         requestAnimationFrame(loop);
       }());
-      
+    },
+    midiObserver() {
+      navigator.requestMIDIAccess().then(
+      (midiAccess) => {
+        //成功
+        try {
+          var outputIterator = midiAccess.outputs.values();
+          for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
+            if (o.value.name.match(/Uplight/)) {
+              this.outputDevice = o.value;
+              console.log(this.outputDevice.name);
+              this.midiOutputIsReady = true;
+              this.clearAll();
+              clearInterval(this.midiObserverId);
+              return;
+            }
+          } 
+          console.log("cannot find Uplight");
+        } catch (e) {
+          console.log("cannot find MIDI device");
+        }
+      },
+      (msg) => {
+        //失敗
+        console.log("Failed to get MIDI access - " + msg);
+      });
     }
   },
   watch: {
     Atime: {
       immediate: true,
       handler: function () {
-        $(".marker-a").css("left", this.Apos);
+        if (this.video_src_is_set) {
+          document.querySelectorAll('.marker-a')[0].style.left = this.Apos;
+        }
       },
     },
     Btime: {
       immediate: true,
       handler: function () {
-        $(".marker-b").css("left", this.Bpos);
+        if (this.video_src_is_set) {
+          document.querySelectorAll('.marker-b')[0].style.left = this.Bpos;
+        }
       },
     },
   },
@@ -223,127 +297,23 @@ new Vue({
       playbackRates: [0.2, 0.5, 1, 1.5, 2]
     });
     this.video_object.ready(() => {
-      let p = jQuery(
-        this.video_object.controlBar.progressControl.children_[0].el_
-      );
-      let marker_a = jQuery('<div class="vjs-marker marker-a"></div>');
-      let marker_b = jQuery('<div class="vjs-marker marker-b"></div>');
-      p.append(marker_a);
-      p.append(marker_b);
+      let p = document.querySelectorAll('.vjs-progress-holder')[0];
+      let marker_a = document.createElement('div');
+      marker_a.className = 'vjs-marker marker-a';
+      let marker_b = document.createElement('div');
+      marker_b.className = 'vjs-marker marker-b';
+      p.appendChild(marker_a);
+      p.appendChild(marker_b);
 
-      this.startLoop();
-
-
-
-    //   this.video_object.on("timeupdate", () => {
-
-    //     let now = this.video_object.currentTime();
-
-    //     //MIDI信号送信の処理
-    //     //AB再生の処理
-    //     if (
-    //       this.Atime &&
-    //       this.Btime &&
-    //       this.ABisActive &&
-    //       !this.video_object.paused() &&
-    //       now > this.Btime
-    //     ) {
-    //       this.video_object.currentTime(this.Atime);
-    //     }
-
-    //     //previous_timeの更新
-    //     this.previous_time = now
-
-    //   });
-      
+      this.startLoop();      
     });
 
-    navigator.requestMIDIAccess().then(
-        (midiAccess) => {
-          //成功
-          console.log("MIDI ready!");
-          // デバイスが 1台だけつながっている前提 ないとエラーになる
-          // const input = midiAccess.inputs.values().next();
-          // console.log(input.value.manufacturer);
-          // console.log(input.value.name);
-          // input.value.onmidimessage = onMIDIMessage;
-          try {
-            let output = midiAccess.outputs.values().next();
-            this.outputDevice = output.value;
-            console.log(this.outputDevice.name);
-            this.midiOutputIsReady = true;
-          } catch (e) {
-            console.log("cannot find MIDI device");
-          }
-        },
-        (msg) => {
-          //失敗
-          console.log("Failed to get MIDI access - " + msg);
-        }
-      );
+    this.midiObserverId = setInterval(this.midiObserver, 3000);
   },
 });
 
 //OpenCV.jsの実験
 function onOpenCvReady() {
-    document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+  opencvReady = true;
+  document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
 }
-//WebMidiの実験
-
-// new Vue({
-//   el: "#webmidi",
-//   data: {
-//     src: "",
-//     midiOutputIsReady: false,
-//     outputDevice: null,
-//     count: 0,
-//   },
-//   computed: {},
-//   methods: {
-//     playScale() {
-//       console.log("playScale");
-//       let o = this.outputDevice;
-//       let scale = [60, 62, 64, 65, 67, 69, 71, 72];
-//       for (let i = 0; i < 8; i++) {
-//         o.send(
-//           [0x90, scale[i], 100],
-//           window.performance.now() + 200 + 1000 * i
-//         );
-//         o.send(
-//           [0x80, scale[i], 0],
-//           window.performance.now() + 200 + 1000 * (i + 1)
-//         );
-//       }
-//     },
-//   },
-//   mounted() {
-//     navigator.requestMIDIAccess().then(
-//       (midiAccess) => {
-//         //成功
-//         console.log("MIDI ready!");
-//         // デバイスが 1台だけつながっている前提 ないとエラーになる
-//         // const input = midiAccess.inputs.values().next();
-//         // console.log(input.value.manufacturer);
-//         // console.log(input.value.name);
-//         // input.value.onmidimessage = onMIDIMessage;
-//         try {
-//           let output = midiAccess.outputs.values().next();
-//           this.outputDevice = output.value;
-//           console.log(this.outputDevice.name);
-//           this.midiOutputIsReady = true;
-//         } catch (e) {
-//           console.log("cannot find MIDI device");
-//         }
-//       },
-//       (msg) => {
-//         //失敗
-//         console.log("Failed to get MIDI access - " + msg);
-//       }
-//     );
-//   },
-// });
-
-// function onMIDIMessage(message) {
-//   const data = message.data;
-//   console.log("MIDI data: ", data);
-// }
