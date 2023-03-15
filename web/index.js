@@ -1,8 +1,6 @@
 //Videoの実験
 Vue.use(window["vue-js-toggle-button"].default);
 
-let opencvReady = false;
-
 new Vue({
   el: "#app",
   data: {
@@ -20,6 +18,7 @@ new Vue({
     key_default_color: [],
     key_note_state: [],
     octave: 4,
+    playbackRate: 1 //再生速度
   },
   computed: {
     Apos: function () {
@@ -177,6 +176,17 @@ new Vue({
       }
       this.clearAll();
     },
+    slower(){
+      this.setSpeed(this.playbackRate-0.05);
+    },
+    faster(){
+      this.setSpeed(this.playbackRate+0.05);
+    },
+    setSpeed(playbackRate){
+      if(0 < playbackRate && playbackRate < 5){
+        this.playbackRate = playbackRate;
+      }
+    },
     clearAll() {
       for (let i = 0; i < 128; ++i) {
         this.uplightSend(i, false);
@@ -287,6 +297,11 @@ new Vue({
         $(".marker-b").css("left", this.Bpos);
       },
     },
+    playbackRate: {
+      handler: function() {
+        this.video_object.playbackRate(this.playbackRate);
+      }
+    }
   },
   mounted() {
     this.video_object = videojs("my-player", {
@@ -307,9 +322,3 @@ new Vue({
     this.midiObserverId = setInterval(this.midiObserver, 3000);
   },
 });
-
-//OpenCV.jsの実験
-function onOpenCvReady() {
-  opencvReady = true;
-  document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
-}
