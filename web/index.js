@@ -18,7 +18,8 @@ new Vue({
     key_default_color: [],
     key_note_state: [],
     octave: 4,
-    playbackRate: 1 //再生速度
+    playbackRate: 1, //再生速度
+    video_show: false,
   },
   computed: {
     Apos: function () {
@@ -31,6 +32,9 @@ new Vue({
   methods: {
     check(text){
       console.log(text);
+    },
+    monitorClick() {
+      this.$refs.input.click();
     },
     setSrc(file) {
       console.log("called");
@@ -147,6 +151,7 @@ new Vue({
       mono.delete();
       dst.delete();
       color_dst.delete();
+      this.video_show = true;
     },
     setA() {
       let now = this.video_object.currentTime();
