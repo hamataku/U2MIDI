@@ -1,13 +1,12 @@
 //Videoの実験
 Vue.use(window["vue-js-toggle-button"].default);
 
-let opencvReady = false;
-
 new Vue({
   el: "#app",
   data: {
     video_object: null,
     video_analysis: null,
+    video_src_is_set: false,
     ABisActive: false,
     video_length: null,
     Atime: null,
@@ -19,6 +18,7 @@ new Vue({
     key_default_color: [],
     key_note_state: [],
     octave: 4,
+    playbackRate: 1 //再生速度
   },
   computed: {
     Apos: function () {
@@ -29,12 +29,18 @@ new Vue({
     },
   },
   methods: {
-    setSrc(e) {
-      let file = e.target.files[0];
+    check(text){
+      console.log(text);
+    },
+    setSrc(file) {
+      console.log("called");
+      //let file = e.target.files[0];
+      //let file = e.dataTransfer.files[0];
       let fileURL = URL.createObjectURL(file);
       let fileType = file.type;
       this.video_object.src({ type: fileType, src: fileURL });
       this.video_object.load();
+      this.video_src_is_set = true;
       this.video_object.on("loadeddata", () => {
         this.video_length = this.video_object.duration();
       });
@@ -170,6 +176,17 @@ new Vue({
       }
       this.clearAll();
     },
+    slower(){
+      this.setSpeed(this.playbackRate-0.05);
+    },
+    faster(){
+      this.setSpeed(this.playbackRate+0.05);
+    },
+    setSpeed(playbackRate){
+      if(0 < playbackRate && playbackRate < 5){
+        this.playbackRate = playbackRate;
+      }
+    },
     clearAll() {
       for (let i = 0; i < 128; ++i) {
         this.uplightSend(i, false);
@@ -177,6 +194,9 @@ new Vue({
     },
     restart() {
       this.video_object.currentTime(0);
+    },
+    toend(){
+      this.video_object.currentTime(this.video_length);
     },
     uplightSend(note, state)
     {
@@ -268,28 +288,37 @@ new Vue({
     Atime: {
       immediate: true,
       handler: function () {
-        $(".marker-a").css("left", this.Apos);
+        if (this.video_src_is_set) {
+          document.querySelectorAll('.marker-a')[0].style.left = this.Apos;
+        }
       },
     },
     Btime: {
       immediate: true,
       handler: function () {
-        $(".marker-b").css("left", this.Bpos);
+        if (this.video_src_is_set) {
+          document.querySelectorAll('.marker-b')[0].style.left = this.Bpos;
+        }
       },
     },
+    playbackRate: {
+      handler: function() {
+        this.video_object.playbackRate(this.playbackRate);
+      }
+    }
   },
   mounted() {
     this.video_object = videojs("my-player", {
       playbackRates: [0.2, 0.5, 1, 1.5, 2]
     });
     this.video_object.ready(() => {
-      let p = jQuery(
-        this.video_object.controlBar.progressControl.children_[0].el_
-      );
-      let marker_a = jQuery('<div class="vjs-marker marker-a"></div>');
-      let marker_b = jQuery('<div class="vjs-marker marker-b"></div>');
-      p.append(marker_a);
-      p.append(marker_b);
+      let p = document.querySelectorAll('.vjs-progress-holder')[0];
+      let marker_a = document.createElement('div');
+      marker_a.className = 'vjs-marker marker-a';
+      let marker_b = document.createElement('div');
+      marker_b.className = 'vjs-marker marker-b';
+      p.appendChild(marker_a);
+      p.appendChild(marker_b);
 
       this.startLoop();      
     });
@@ -297,9 +326,3 @@ new Vue({
     this.midiObserverId = setInterval(this.midiObserver, 3000);
   },
 });
-
-//OpenCV.jsの実験
-function onOpenCvReady() {
-  opencvReady = true;
-  document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
-}
