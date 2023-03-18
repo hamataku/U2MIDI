@@ -8,18 +8,24 @@ new Vue({
     video_analysis: null,
     video_src_is_set: false,
     ABisActive: false,
+    practiceIsActive: false,
     video_length: null,
+    playbackRate: 1, //再生速度
+    video_show: false,
     Atime: null,
     Btime: null,
+
     midiOutputIsReady: false,
     outputDevice: null,
+    inputDevices: [],
+    inputDevice: null,
     midiObserverId: null,
+    practiceNote: Array.from({ length: 128 }, () => false),
+
     key_list: [],
     key_default_color: [],
     key_note_state: [],
     octave: 4,
-    playbackRate: 1, //再生速度
-    video_show: false,
   },
   computed: {
     Apos: function () {
@@ -42,7 +48,6 @@ new Vue({
       this.setSrc("./sample.mp4");
     },
     setSrc(file) {
-      console.log("setSrc", file);
       let fileURL = URL.createObjectURL(file);
       let fileType = file.type;
       this.video_object.src({ type: fileType, src: fileURL });
@@ -184,6 +189,7 @@ new Vue({
       }
       cv.imshow('canvasOutput2', color_dst);
       
+      M.delete();
       src.delete();
       mono.delete();
       dst.delete();
@@ -240,16 +246,35 @@ new Vue({
     toend(){
       this.video_object.currentTime(this.video_length);
     },
-    uplightSend(note, state)
-    {
+    uplightSend(note, state) {
       if (note < 0 || note > 127) {
         return;
       }
-      if (this.midiOutputIsReady) {
-        if(state){
+      if (state) {
+        if (this.midiOutputIsReady) {
           this.outputDevice.send([0x90, note, 127]);
-        } else {
+        }
+        this.practiceNote[note + this.octave * 12] = true;
+      } else {
+        if (this.midiOutputIsReady) {
           this.outputDevice.send([0x80, note, 0]);
+        }
+      }
+    },
+    practiceCheck() {
+      //練習モード
+      if (this.practiceIsActive) {
+        var isAllOff = true;
+        for (let i = 0; i < 128; ++i) {
+          if (this.practiceNote[i]) {
+            isAllOff = false;
+            break;
+          }
+        }
+        if (isAllOff) {
+          this.video_object.play();
+        } else {
+          this.video_object.pause();
         }
       }
     },
@@ -262,7 +287,8 @@ new Vue({
       var ctx = canvas.getContext('2d',{willReadFrequently: true});
       (function loop(){
         //再生中じゃなければ何もしない
-        if(this_.video_object.paused() || this_.video_object.seeking()){
+        if (this_.video_object.paused() || this_.video_object.seeking()) {
+          this_.practiceCheck();
         } else {
           let now = this_.video_object.currentTime();
 
@@ -295,6 +321,7 @@ new Vue({
           ) {
             this_.video_object.currentTime(this_.Atime);
           }
+          this_.practiceCheck();
         }
         requestAnimationFrame(loop);
       }());
@@ -304,6 +331,15 @@ new Vue({
       (midiAccess) => {
         //成功
         try {
+          if (this.inputDevices.length == 0) {
+            var inputIterator = midiAccess.inputs.values();
+            for (var i = inputIterator.next(); !i.done; i = inputIterator.next()) {
+              if (!i.value.name.match(/Uplight/)) {
+                this.inputDevices.push(i.value);
+                return;
+              }
+            }
+          }
           var outputIterator = midiAccess.outputs.values();
           for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
             if (o.value.name.match(/Uplight/)) {
@@ -324,6 +360,29 @@ new Vue({
         //失敗
         console.log("Failed to get MIDI access - " + msg);
       });
+    },
+    setInputDevice(input) {
+      this.practiceNote = Array.from({ length: 128 }, () => false);
+      if (input.target.value == -1) {
+        this.inputDevice.onmidimessage = (event) => {
+        };
+        this.inputDevice = null;
+        return;
+      }
+      this.inputDevice = this.inputDevices[input.target.value];
+      console.log(this.inputDevice.name + " is selected");
+      this.inputDevice.onmidimessage = (event) => {
+        if (event.data[0] == 0x90) {
+          if (event.data[2] == 0) {
+            console.log("Input Note off: ", event.data[1]);
+          } else {
+            console.log("Input Note on:  ", event.data[1]);
+            this.practiceNote[event.data[1]] = false;
+          }
+        } else if (event.data[0] == 0x80) {
+          console.log("Input Note off: ", event.data[1]);
+        }
+      };
     }
   },
   watch: {
