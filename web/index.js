@@ -18,7 +18,8 @@ new Vue({
     key_default_color: [],
     key_note_state: [],
     octave: 4,
-    playbackRate: 1 //再生速度
+    playbackRate: 1, //再生速度
+    video_show: false,
   },
   computed: {
     Apos: function () {
@@ -32,10 +33,16 @@ new Vue({
     check(text){
       console.log(text);
     },
+    monitorClick() {
+      if (!this.video_src_is_set) {
+        this.$refs.input.click();
+      }
+    },
+    sampleClick() {
+      this.setSrc("./sample.mp4");
+    },
     setSrc(file) {
-      console.log("called");
-      //let file = e.target.files[0];
-      //let file = e.dataTransfer.files[0];
+      console.log("setSrc", file);
       let fileURL = URL.createObjectURL(file);
       let fileType = file.type;
       this.video_object.src({ type: fileType, src: fileURL });
@@ -147,6 +154,7 @@ new Vue({
       mono.delete();
       dst.delete();
       color_dst.delete();
+      this.video_show = true;
     },
     setA() {
       let now = this.video_object.currentTime();
@@ -308,9 +316,7 @@ new Vue({
     }
   },
   mounted() {
-    this.video_object = videojs("my-player", {
-      playbackRates: [0.2, 0.5, 1, 1.5, 2]
-    });
+    this.video_object = videojs("my-player");
     this.video_object.ready(() => {
       let p = document.querySelectorAll('.vjs-progress-holder')[0];
       let marker_a = document.createElement('div');
