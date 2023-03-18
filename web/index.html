@@ -2,14 +2,19 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <link href="http://fonts.googleapis.com/earlyaccess/notosansjp.css" />
     <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+    <link 
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet" 
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" 
+      crossorigin="anonymous">
     <link href="./style.css" rel="stylesheet" />
   </head>
   <body>
-    <div id="app">
+    <div id="app" class="text-center" @dragover.prevent="" @dragleave="" @drop.stop.prevent="(e) => setSrc(e.dataTransfer.files[0])">
       <div id="video_test">
-        <h2>Videoの再生制御のテスト</h2>
-        <!-- <video id="my-player" :src="src" width="320" height="240" controls></video> -->
+        <h2>動画</h2>
         <video
           id="my-player"
           class="video-js"
@@ -18,41 +23,53 @@
           data-setup="{}"
           width="640"
           height="480"
-        >
-        </video>
-        <br />
-        <div>
-          <toggle-button v-model="ABisActive"></toggle-button>
-          <button @click="restart">＜</button>
-          <button @click="setA">A</button>
-          <button @click="setB">B</button>
+        ></video>
+        <div class="p-2">
+          動画をドラッグ＆ドロップ
+          <br>
+          or
+          <input type="file" id="fileInput" name="file" @change="(e) => setSrc(e.target.files[0])" />
         </div>
-        <div>
-          octave
-          <button @click="octaveUp">+</button>
-          {{ octave }}
-          <button @click="octaveDown">-</button>
-        </div>
-        <div class="caption">
-          imageSrc
-          <input type="file" id="fileInput" name="file" @change="setSrc" />
+        <div class="d-flex pb-2 align-items-center justify-content-center">
+
+          <div class="p-2 px-6">
+            <h4>再生速度</h4>
+            <button @click="slower()" class="btn btn-primary px-2">ー</button>
+            <span class="font-weight-normal px-2">×{{Math.round(playbackRate*100)/100}}</span>
+            <button @click="faster()" class="btn btn-primary px-2">＋</button>
+          </div>
+
+          <div class="p-2 px-6">
+            <h4>AB再生</h4>
+            <toggle-button v-model="ABisActive"></toggle-button>
+            <br />
+            <button @click="restart" class="btn btn-primary">＜</button>
+            <button @click="setA" class="btn btn-dark">A</button>
+            <button @click="setB" class="btn btn-dark">B</button>
+            <button @click="toend" class="btn btn-primary">＞</button>
+          </div>
+        
+          <div class="p-2 px-6">
+            <h4>オクターブ調整</h4>
+            <button @click="octaveDown" class="btn btn-primary px-2">ー</button>
+            <span class="font-weight-normal px-2">{{octave}}</span>
+            <button @click="octaveUp" class="btn btn-primary px-2">＋</button>
+          </div>
         </div>
       </div>
 
       <h2>鍵盤解析結果</h2>
-      <p id="status">OpenCV.js is loading...</p>
-      <canvas id="canvasOutput1" ></canvas>
-      <canvas id="canvasOutput2" ></canvas>
-      <canvas id="canvasOutput3" ></canvas>
-      <canvas id="canvasOutput4" ></canvas>
+      <canvas id="canvasOutput1"></canvas>
+      <canvas id="canvasOutput2"></canvas>
     </div>
 
-    <!--jQueryはマーカー挿入にのみ用いる-->
-    <script
-      src="https://code.jquery.com/jquery-3.6.3.js"
-      integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM="
-      crossorigin="anonymous"
-    ></script>
+    <!--bootstrapに必要-->
+    <script 
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" 
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" 
+      crossorigin="anonymous">
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue-js-toggle-button@1.3.2/dist/index.min.js"></script>
@@ -61,7 +78,6 @@
     <script
       async
       src="opencv.js"
-      onload="onOpenCvReady();"
       type="text/javascript"
     ></script>
   </body>

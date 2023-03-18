@@ -1,13 +1,12 @@
 //Videoの実験
 Vue.use(window["vue-js-toggle-button"].default);
 
-let opencvReady = false;
-
 new Vue({
   el: "#app",
   data: {
     video_object: null,
     video_analysis: null,
+    video_src_is_set: false,
     ABisActive: false,
     video_length: null,
     Atime: null,
@@ -19,6 +18,7 @@ new Vue({
     key_default_color: [],
     key_note_state: [],
     octave: 4,
+    playbackRate: 1 //再生速度
   },
   computed: {
     Apos: function () {
@@ -29,12 +29,18 @@ new Vue({
     },
   },
   methods: {
-    setSrc(e) {
-      let file = e.target.files[0];
+    check(text){
+      console.log(text);
+    },
+    setSrc(file) {
+      console.log("called");
+      //let file = e.target.files[0];
+      //let file = e.dataTransfer.files[0];
       let fileURL = URL.createObjectURL(file);
       let fileType = file.type;
       this.video_object.src({ type: fileType, src: fileURL });
       this.video_object.load();
+      this.video_src_is_set = true;
       this.video_object.on("loadeddata", () => {
         this.video_length = this.video_object.duration();
       });
@@ -60,67 +66,36 @@ new Vue({
       let cap = new cv.VideoCapture(this.video_analysis);
       cap.read(src);
       cv.cvtColor(src, mono, cv.COLOR_RGBA2GRAY);
-      
-      //binarize, canny, and houghlinesP
-      cv.threshold(mono, mono, 200, 255, cv.THRESH_BINARY);
-      cv.imshow("canvasOutput1", mono);
-      cv.Canny(mono, mono, 0, 0, 3);
-      cv.imshow('canvasOutput2', mono);
-      let h_lines = new cv.Mat();
-      cv.HoughLinesP(mono, h_lines, 1, Math.PI/180, 100, 1000, 100);
-
-      //　get the top and the bottom lines of the keyboard
-      let minY = 1000;
-      let maxY = 0;
-      let min_index = 0;
-      let max_index = 0;
-      for (let i = 0; i < h_lines.rows; ++i) {
-        if (h_lines.data32S[i*4 + 1] < minY && h_lines.data32S[i*4 + 1] > mono.rows/2) { //piano keyboard region is basically at the bottom half of the image, so "> mono.rows/2"
-          minY = h_lines.data32S[i*4 + 1];
-          min_index = i;
-        }
-        if (h_lines.data32S[i*4 + 1] > maxY && h_lines.data32S[i*4 + 1] > mono.rows/2) {
-          maxY = h_lines.data32S[i*4 + 1];
-          max_index = i;
-        }
-      }
-
-      // cut out the keyboard region
-      let rect = new cv.Rect(h_lines.data32S[min_index*4], h_lines.data32S[min_index*4+1], h_lines.data32S[max_index*4+2] - h_lines.data32S[max_index*4], (h_lines.data32S[max_index*4+1] - h_lines.data32S[min_index*4+1]) * 7/9); //(x, y, width, height), multiply by 7/9 to avoid katakana.
+      let start_row = src.rows/3*2;
+      let rect = new cv.Rect(0, start_row, src.cols, src.rows - start_row);
       let dst = mono.roi(rect);
       let color_dst = src.roi(rect);
+      
+      cv.threshold(dst, dst, 100, 255, cv.THRESH_BINARY);
+      cv.Canny(dst, dst, 100, 200, 3);
 
-      // dilate the image to fix dotted lines
-      let M = cv.Mat.ones(3, 3, cv.CV_8U);
-      let anchor = new cv.Point(-1, -1);
-      cv.dilate(dst, dst, M, anchor, 1, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
-      cv.imshow('canvasOutput3', dst);
+      cv.imshow('canvasOutput1', dst);
 
-      // detect vertical lines of the keyboard using HoughLinesP
       let lines = new cv.Mat();
-      cv.HoughLinesP(dst, lines, 1, Math.PI, 100, dst.rows/3*2);
+      cv.HoughLinesP(dst, lines, 2, Math.PI, 130, 30, 2);
 
       // sort position of lines
       let pos_list = [];
-      for (let i = 0; i < lines.rows; ++i) //(x1, y1, x2, y2) for each line
+      for (let i = 0; i < lines.rows; ++i)
       {
-        pos_list.push([lines.data32S[i * 4], lines.data32S[i * 4 + 1]]); //only extract "x1" and "y1"
+        pos_list.push([lines.data32S[i * 4], lines.data32S[i * 4 + 1]]);
       }
       pos_list.sort(function (a, b) { return (a[0] - b[0]); });
-      console.log(pos_list.length);
-
 
       // thin out the lines
       for (let i = 0; i < pos_list.length - 1; ++i)
       {
-        if (Math.abs(pos_list[i][0] - pos_list[i + 1][0]) < 3) {
+        if (Math.abs(pos_list[i][0] - pos_list[i + 1][0]) < 5) {
           pos_list[i + 1][0] = (pos_list[i][0] + pos_list[i + 1][0]) / 2;
           pos_list[i + 1][1] = Math.max(pos_list[i][1], pos_list[i + 1][1]);
-          pos_list.splice(i, 1); //remove index i value
-          i -= 1;
+          pos_list.splice(i, 1);
         }
       }
-      console.log(pos_list.length);
 
       // detect first long line between B and C
       let threshold = dst.rows - 40;
@@ -134,7 +109,7 @@ new Vue({
         }
       }
 
-      // make key_list  format:(key's center x coordinate, key number)
+      // make key_list
       for (let i = 0; i < pos_list.length + 1; ++i)
       {
         if (i == 0) {
@@ -159,7 +134,6 @@ new Vue({
 
       console.log(this.key_list);
 
-      //show the detected lines on the original image
       let color = new cv.Scalar(0, 255, 0, 255);
       for (let i = 0; i < pos_list.length; ++i)
       {
@@ -167,7 +141,7 @@ new Vue({
         let endPoint = new cv.Point(pos_list[i][0], pos_list[i][1]);
         cv.line(color_dst, startPoint, endPoint, color);
       }
-      cv.imshow('canvasOutput4', color_dst);
+      cv.imshow('canvasOutput2', color_dst);
       
       src.delete();
       mono.delete();
@@ -202,6 +176,17 @@ new Vue({
       }
       this.clearAll();
     },
+    slower(){
+      this.setSpeed(this.playbackRate-0.05);
+    },
+    faster(){
+      this.setSpeed(this.playbackRate+0.05);
+    },
+    setSpeed(playbackRate){
+      if(0 < playbackRate && playbackRate < 5){
+        this.playbackRate = playbackRate;
+      }
+    },
     clearAll() {
       for (let i = 0; i < 128; ++i) {
         this.uplightSend(i, false);
@@ -209,6 +194,9 @@ new Vue({
     },
     restart() {
       this.video_object.currentTime(0);
+    },
+    toend(){
+      this.video_object.currentTime(this.video_length);
     },
     uplightSend(note, state)
     {
@@ -278,7 +266,7 @@ new Vue({
           for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
             if (o.value.name.match(/Uplight/)) {
               this.outputDevice = o.value;
-              // console.log(this.outputDevice.name);
+              console.log(this.outputDevice.name);
               this.midiOutputIsReady = true;
               this.clearAll();
               clearInterval(this.midiObserverId);
@@ -300,28 +288,37 @@ new Vue({
     Atime: {
       immediate: true,
       handler: function () {
-        $(".marker-a").css("left", this.Apos);
+        if (this.video_src_is_set) {
+          document.querySelectorAll('.marker-a')[0].style.left = this.Apos;
+        }
       },
     },
     Btime: {
       immediate: true,
       handler: function () {
-        $(".marker-b").css("left", this.Bpos);
+        if (this.video_src_is_set) {
+          document.querySelectorAll('.marker-b')[0].style.left = this.Bpos;
+        }
       },
     },
+    playbackRate: {
+      handler: function() {
+        this.video_object.playbackRate(this.playbackRate);
+      }
+    }
   },
   mounted() {
     this.video_object = videojs("my-player", {
       playbackRates: [0.2, 0.5, 1, 1.5, 2]
     });
     this.video_object.ready(() => {
-      let p = jQuery(
-        this.video_object.controlBar.progressControl.children_[0].el_
-      );
-      let marker_a = jQuery('<div class="vjs-marker marker-a"></div>');
-      let marker_b = jQuery('<div class="vjs-marker marker-b"></div>');
-      p.append(marker_a);
-      p.append(marker_b);
+      let p = document.querySelectorAll('.vjs-progress-holder')[0];
+      let marker_a = document.createElement('div');
+      marker_a.className = 'vjs-marker marker-a';
+      let marker_b = document.createElement('div');
+      marker_b.className = 'vjs-marker marker-b';
+      p.appendChild(marker_a);
+      p.appendChild(marker_b);
 
       this.startLoop();      
     });
@@ -329,9 +326,3 @@ new Vue({
     this.midiObserverId = setInterval(this.midiObserver, 3000);
   },
 });
-
-//OpenCV.jsの実験
-function onOpenCvReady() {
-  opencvReady = true;
-  document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
-}
