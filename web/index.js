@@ -34,12 +34,15 @@ new Vue({
       console.log(text);
     },
     monitorClick() {
-      this.$refs.input.click();
+      if (!this.video_src_is_set) {
+        this.$refs.input.click();
+      }
+    },
+    sampleClick() {
+      this.setSrc("./sample.mp4");
     },
     setSrc(file) {
-      console.log("called");
-      //let file = e.target.files[0];
-      //let file = e.dataTransfer.files[0];
+      console.log("setSrc", file);
       let fileURL = URL.createObjectURL(file);
       let fileType = file.type;
       this.video_object.src({ type: fileType, src: fileURL });
@@ -313,9 +316,7 @@ new Vue({
     }
   },
   mounted() {
-    this.video_object = videojs("my-player", {
-      playbackRates: [0.2, 0.5, 1, 1.5, 2]
-    });
+    this.video_object = videojs("my-player");
     this.video_object.ready(() => {
       let p = document.querySelectorAll('.vjs-progress-holder')[0];
       let marker_a = document.createElement('div');
