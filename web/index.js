@@ -1,4 +1,4 @@
-//Videoの実験
+//Videoの実験 //test
 Vue.use(window["vue-js-toggle-button"].default);
 
 new Vue({
