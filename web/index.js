@@ -148,7 +148,7 @@ new Vue({
       for (let i = 0; i < pos_list.length - 13; ++i)
       {
         if (pos_list[i][1] > threshold && pos_list[i + 5][1] > threshold && pos_list[i + 12][1] > threshold) {
-          standard = i % 12 + 1 - 3 * 12;
+          standard = i % 12 + 1 - 1 * 12;
           console.log("standard: ", standard);
           break;
         }
@@ -176,7 +176,7 @@ new Vue({
           this.key_info.push([255, "white", key_width, key_height]); // 白鍵
         } else if (rem == 2 || rem == 4 || rem == 7 || rem == 9 || rem == 11) {
           this.key_info.push([255, "white offset", key_width, key_height]); // 白鍵offset
-        } {
+        } else {
           this.key_info.push([0, "black", key_width * 0.8, key_height * 0.7]); // 黒鍵
         }
       }
@@ -305,7 +305,7 @@ new Vue({
           for (let i = 0; i < this_.key_list.length; ++i) {
             var imageData = ctx.getImageData(this_.key_list[i][0], 630, 1, 1);
             let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
-            if (Math.abs(color - this_.key_info[i]) > 50) {
+            if (Math.abs(color - this_.key_info[i][0]) > 50) {
               if (!this_.key_note_state[i]){
                 this_.key_note_state[i] = true;
                 this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
