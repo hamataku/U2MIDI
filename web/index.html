@@ -29,6 +29,11 @@
       </nav>
       <div id="video_test">
         <div class="p-2">
+          <div id="alert-box" class="w-full" style="height: 58px;">
+            <div v-show="alert_analysis_failed" class="alert alert-danger w-100 mb-0 text-start">動画の解析に失敗しました。</div>
+            <div v-show="alert_uplight_connected" class="alert alert-success w-100 mb-0 text-start">Uplightが接続されました。</div>
+            <div v-show="alert_keyboard_connected" class="alert alert-success w-100 mb-0 text-start">キーボードが接続されました。</div>
+          </div>
           <div id="monitor" @dragover.prevent="" @dragleave="" @drop.stop.prevent="(e) => setSrc(e.dataTransfer.files[0])">
             <div id="monitorscreen" @click="monitorClick">
               <div v-show="video_show">
