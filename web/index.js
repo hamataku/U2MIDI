@@ -23,7 +23,7 @@ new Vue({
     practiceNote: Array.from({ length: 128 }, () => false),
 
     key_list: [],
-    key_default_color: [],
+    key_info: [],
     key_note_state: [],
     octave: 4,
   },
@@ -166,14 +166,18 @@ new Vue({
         }
       }
 
-      // get key_default_color
+      // get key_info (key_color, key class, key_width, key_height)
+      var key_width = 2;
+      var key_height = 6;
       for (let i = 0; i < this.key_list.length; ++i)
       {
         let rem = this.key_list[i][1] % 12;
-        if (rem == 0 || rem == 2 || rem == 4 || rem == 5 || rem == 7 || rem == 9 || rem == 11) {
-          this.key_default_color.push(255); // 白鍵
-        } else {
-          this.key_default_color.push(0); // 黒鍵
+        if (rem == 0 || rem == 5) {
+          this.key_info.push([255, "white", key_width, key_height]); // 白鍵
+        } else if (rem == 2 || rem == 4 || rem == 7 || rem == 9 || rem == 11) {
+          this.key_info.push([255, "white offset", key_width, key_height]); // 白鍵offset
+        } {
+          this.key_info.push([0, "black", key_width * 0.8, key_height * 0.7]); // 黒鍵
         }
       }
 
@@ -261,6 +265,11 @@ new Vue({
         }
       }
     },
+    practiceButton() {
+      this.video_object.playbackRate(this.playbackRate);
+      this.practiceNote = Array.from({ length: 128 }, () => false);
+      this.clearAll();
+    },
     practiceCheck() {
       //練習モード
       if (this.practiceIsActive) {
@@ -272,9 +281,9 @@ new Vue({
           }
         }
         if (isAllOff) {
-          this.video_object.play();
+          this.video_object.playbackRate(this.playbackRate);
         } else {
-          this.video_object.pause();
+          this.video_object.playbackRate(0);
         }
       }
     },
@@ -288,7 +297,7 @@ new Vue({
       (function loop(){
         //再生中じゃなければ何もしない
         if (this_.video_object.paused() || this_.video_object.seeking()) {
-          this_.practiceCheck();
+          // this_.practiceCheck();
         } else {
           let now = this_.video_object.currentTime();
 
@@ -296,7 +305,7 @@ new Vue({
           for (let i = 0; i < this_.key_list.length; ++i) {
             var imageData = ctx.getImageData(this_.key_list[i][0], 630, 1, 1);
             let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
-            if (Math.abs(color - this_.key_default_color[i]) > 50) {
+            if (Math.abs(color - this_.key_info[i]) > 50) {
               if (!this_.key_note_state[i]){
                 this_.key_note_state[i] = true;
                 this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
