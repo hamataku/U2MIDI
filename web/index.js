@@ -354,11 +354,11 @@ new Vue({
           var outputIterator = midiAccess.outputs.values();
           for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
             if (o.value.name.match(/Uplight/)) {
+              clearInterval(this.midiObserverId);
               this.outputDevice = o.value;
               console.log(this.outputDevice.name);
               this.midiOutputIsReady = true;
               this.clearAll();
-              clearInterval(this.midiObserverId);
               this.showUplightConnectedAlert();
               return;
             }
