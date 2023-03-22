@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> 
+    <title>Uplight</title>
+    <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/earlyaccess/kokoro.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <link href="./style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="app" class="text-center">
+      <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand link-light" href="#">Uplight</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active link-light" aria-current="page" href="#">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link link-light" href="https://github.com/hamataku/Uplight">Github<i class="fa-brands fa-github"></i></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <div id="video_test">
+        <div class="p-2">
+          <div id="monitor" @dragover.prevent="" @dragleave="" @drop.stop.prevent="(e) => setSrc(e.dataTransfer.files[0])">
+            <div id="monitorscreen" @click="monitorClick">
+              <div v-show="video_show">
+                <video
+                  id="my-player"
+                  class="video-js vjs-fluid"
+                  controls
+                  preload="auto"
+                  playbackRates="[0.2, 0.5, 1, 1.5, 2]"
+                ></video>
+              </div>
+              <div class="text-center">
+                <br><br>
+                <p class="display-4"><i class="fa-solid fa-upload"></i><br>Add video</p>
+                <input type="file" ref="input" accept=".mp4" id="fileInput" name="file" hidden @change="(e) => setSrc(e.target.files[0])" />
+              </div>
+            </div>
+          </div>
+          <!-- <ul id="keyboard">
+            <li v-for="val in key_info" :class="val[1]" :style="{ width: val[2] + 'em', height: val[3] + 'rem' }"></li>
+          </ul> -->
+        </div>
+        <div class="container">
+          <table class="table table-borderless" v-show="video_show">
+            <tbody>
+              <tr>
+                <th scope="row">再生速度</th>
+                <td>
+                  <button @click="slower()" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                  <span class="font-weight-normal px-2">×{{Math.round(playbackRate*100)/100}}</span>
+                  <button @click="faster()" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">AB再生<toggle-button v-model="ABisActive"></toggle-button></th>
+                <td>
+                  <button @click="restart" class="btn btn-outline-secondary btn-sm">＜</button>
+                  <button @click="setA" class="btn btn-dark btn-sm">A</button>
+                  <button @click="setB" class="btn btn-dark btn-sm">B</button>
+                  <button @click="toend" class="btn btn-outline-secondary btn-sm">＞</button>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">オクターブ調整</th>
+                <td>
+                  <button @click="octaveDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                  <span class="font-weight-normal px-2">{{octave}}</span>
+                  <button @click="octaveUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">練習モード<toggle-button v-model="practiceIsActive" @change="practiceButton"></toggle-button></th>
+                <td>
+                  <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
+                    <option selected :value="-1">MIDIキーボードを選択</option>
+                    <option v-for="(input, index) in inputDevices" :value="index">
+                      {{input.name}}
+                    </option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="container" v-show="video_show">
+        <div class="accordion accordion-flush" id="accordionFlushExample">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="flush-headingOne">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+              キーボード認識結果
+            </button>
+          </h2>
+          <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">
+              <canvas class="keyboard-output" id="canvasOutput1"></canvas>
+              <canvas class="keyboard-output" id="canvasOutput2"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+      <footer class="py-3 my-4">
+        <ul class="nav justify-content-center">
+          <li class="nav-item"><a href="#" class="nav-link px-2 link-light">Home</a></li>
+          <li class="nav-item"><a href="https://github.com/hamataku/Uplight" class="nav-link px-2 link-light">Github<i class="fa-brands fa-github"></i></a></li>
+        </ul>
+        <p class="text-center">©2023 team_uplight<br>100 project</p>
+      </footer>
+    </div>
+
+    <!--bootstrapに必要-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-js-toggle-button@1.3.2/dist/index.min.js"></script>
+    <script src="https://kit.fontawesome.com/65c4b87db4.js" crossorigin="anonymous"></script>
+    <script src="./index.js"></script>
+    <script
+      async
+      src="opencv.js"
+      type="text/javascript"
+    ></script>
+  </body>
+</html>
