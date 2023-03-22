@@ -1,10 +1,9 @@
 body {
-  font-family: "Kokoro";
+  font-family: "Noto Sans", sans-serif;
   background-color: #f5f5f5;
 }
 
 nav, footer {
-  background-color: purple;
   color: #f5f5f5;
 }
 
