@@ -145,12 +145,12 @@ nav, footer {
 
 #monitorscreen {
 	position: relative;
-  background-color: #777;
+  background-color: #ccc;
 	background-size: cover; 
 	background-position: top center;
-	height: 0;
+	/* height: 0; */
 	padding-bottom: 56.25%; 
-	overflow: hidden;
+	/* overflow: hidden; */
 }
 
 
