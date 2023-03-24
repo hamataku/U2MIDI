@@ -11,7 +11,7 @@
   <body>
     <div id="app">
       <vue_navbar></vue_navbar>
-      <practice_component :data="video_lists[4]"></practice_component>
+      <scoring_component :data="video_lists[4]"></scoring_component>
       <vue_footer></vue_footer>
     </div>
 
@@ -26,8 +26,27 @@
     <!-- component -->
     <script src="../components/navbar.js"></script>
     <script src="../components/footer.js"></script>
-    <script src="../components/practice_component.js"></script>
+    <script src="../components/scoring_component.js"></script>
 
-    <script src="./scoring.js"></script>
+    <script>
+      Vue.use(window["vue-js-toggle-button"].default);
+      new Vue({
+        el: "#app",
+        data: {
+          video_lists: [
+            ["きらきら星", "videos/beginner/kirakira_boshi.mp4", "videos/beginner/kirakira_boshi.png"],
+            ["さんぽ", "videos/beginner/sanpo.mp4", "videos/beginner/sanpo.png"],
+            ["かえるのうた", "videos/intermediate/kaeru_no_uta.mp4", "videos/intermediate/kaeru_no_uta.png"],
+            ["となりのトトロ", "videos/intermediate/tonari_no_totoro.mp4", "videos/intermediate/tonari_no_totoro.png"],
+            ["ビリーブ", "videos/advanced/believe.mp4", "videos/advanced/believe.png"],
+            ["夢をかなえてドラえもん", "videos/advanced/yumewo_kanaete_doraemon.mp4", "videos/advanced/yumewo_kanaete_doraemon.png"],
+          ],
+        }
+      });
+    </script>
+    <script
+      src="../opencv.js"
+      type="text/javascript"
+    ></script>
   </body>
 </html>
