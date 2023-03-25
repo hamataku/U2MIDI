@@ -21,6 +21,7 @@ Vue.component('scoring_component', {
       key_list: [],
       key_default_color: [],
       key_note_state: [],
+      key_top: null,
       octave: 4,
 
       song_finished: false,
@@ -127,6 +128,8 @@ Vue.component('scoring_component', {
           max_index = i;
         }
       }
+
+      this.key_top = minY;
 
       // cut out the keyboard region
       let rect = new cv.Rect(
@@ -249,7 +252,7 @@ Vue.component('scoring_component', {
     startLoop(){
       let this_ = this;
       let video_body = document.getElementById("my-player_html5_api");
-      let canvas = document.createElement('canvas');
+      let canvas = document.getElementById('canvasOutput1');
       canvas.width = 1280;
       canvas.height = 720;
       var ctx = canvas.getContext('2d',{willReadFrequently: true});
@@ -261,7 +264,7 @@ Vue.component('scoring_component', {
 
           ctx.drawImage(video_body, 0, 0);
           for (let i = 0; i < this_.key_list.length; ++i) {
-            var imageData = ctx.getImageData(this_.key_list[i][0], 630, 1, 1);
+            var imageData = ctx.getImageData(this_.key_list[i][0], this_.key_top + 20, 1, 1);
             let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
             if (Math.abs(color - this_.key_default_color[i]) > 50) {
               if (!this_.key_note_state[i]){
