@@ -9,7 +9,10 @@ Vue.component('vue_navbar', {
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link active link-light" aria-current="page" href="#">Home</a>
+                            <a class="nav-link active link-light" aria-current="page" href="https://hamataku.github.io/Uplight/web/index.html">ホーム</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active link-light" aria-current="page" href="https://hamataku.github.io/Uplight/web/video.html">オンライン</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link link-light" href="https://github.com/hamataku/Uplight">Github<i class="fa-brands fa-github"></i></a>
