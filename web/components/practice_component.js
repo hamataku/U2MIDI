@@ -31,6 +31,7 @@ Vue.component('practice_component', {
   },
   template:`
       <div id="practice_component" class="container">
+        <div id="monitor">
         <div id="monitorscreen">
             <video
             id="my-player"
@@ -41,48 +42,49 @@ Vue.component('practice_component', {
             >
               <source :src="'../' + data[1]" type="video/mp4"/>
             </video>
-            <br>
-            <table class="table table-borderless">
-              <tbody>
-                <tr>
-                  <th scope="row">再生速度</th>
-                  <td>
-                    <button @click="slower()" class="btn btn-outline-secondary btn-sm px-2">ー</button>
-                    <span class="font-weight-normal px-2">×{{Math.round(playbackRate*100)/100}}</span>
-                    <button @click="faster()" class="btn btn-outline-secondary btn-sm px-2">＋</button>
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">AB再生<toggle-button v-model="ABisActive"></toggle-button></th>
-                  <td>
-                    <button @click="restart" class="btn btn-outline-secondary btn-sm">＜</button>
-                    <button @click="setA" class="btn btn-dark btn-sm">A</button>
-                    <button @click="setB" class="btn btn-dark btn-sm">B</button>
-                    <button @click="toend" class="btn btn-outline-secondary btn-sm">＞</button>
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">オクターブ調整</th>
-                  <td>
-                    <button @click="octaveDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
-                    <span class="font-weight-normal px-2">{{octave}}</span>
-                    <button @click="octaveUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">練習モード<toggle-button v-model="practiceIsActive"></toggle-button></th>
-                  <td>
-                    <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
-                      <option selected :value="-1">MIDIキーボードを選択</option>
-                      <option v-for="(input, index) in inputDevices" :value="index">
-                        {{input.name}}
-                      </option>
-                    </select>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
         </div>
+        </div>
+        <br>
+        <table class="table table-borderless">
+          <tbody>
+            <tr>
+              <th scope="row">再生速度</th>
+              <td>
+                <button @click="slower()" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                <span class="font-weight-normal px-2">×{{Math.round(playbackRate*100)/100}}</span>
+                <button @click="faster()" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">AB再生<toggle-button v-model="ABisActive"></toggle-button></th>
+              <td>
+                <button @click="restart" class="btn btn-outline-secondary btn-sm">＜</button>
+                <button @click="setA" class="btn btn-dark btn-sm">A</button>
+                <button @click="setB" class="btn btn-dark btn-sm">B</button>
+                <button @click="toend" class="btn btn-outline-secondary btn-sm">＞</button>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">オクターブ調整</th>
+              <td>
+                <button @click="octaveDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                <span class="font-weight-normal px-2">{{octave}}</span>
+                <button @click="octaveUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">練習モード<toggle-button v-model="practiceIsActive"></toggle-button></th>
+              <td>
+                <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
+                  <option selected :value="-1">MIDIキーボードを選択</option>
+                  <option v-for="(input, index) in inputDevices" :value="index">
+                    {{input.name}}
+                  </option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
         <div class="accordion accordion-flush" id="accordionFlushExample">
           <div class="accordion-item">

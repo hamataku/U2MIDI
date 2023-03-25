@@ -29,19 +29,22 @@ Vue.component('scoring_component', {
   },
   template:`
       <div id="scoring_component" class="container">
-        <div id="monitorscreen">
-            <video
-            id="my-player"
-            class="video-js vjs-fluid"
-            preload="auto"
-            playbackRates="[0.2, 0.5, 1, 1.5, 2]"
-            >
-              <source :src="'../' + data[1]" type="video/mp4"/>
-            </video>
-
-            <button @click="startSong()">開始</button>
-            <p v-if="song_finished">採点結果を表示</p>
+        <div id="monitor">
+          <div id="monitorscreen">
+              <video
+              id="my-player"
+              class="video-js vjs-fluid"
+              preload="auto"
+              playbackRates="[0.2, 0.5, 1, 1.5, 2]"
+              >
+                <source :src="'../' + data[1]" type="video/mp4"/>
+              </video>
+          </div>
         </div>
+        <div class="d-grid gap-2 d-md-block">
+          <button class="btn btn-primary" type="button" @click="startSong()">開始</button>
+        </div>
+        <p v-if="song_finished">採点結果を表示</p>
 
         <div class="accordion accordion-flush" id="accordionFlushExample">
           <div class="accordion-item">
@@ -119,11 +122,11 @@ Vue.component('scoring_component', {
       let max_index = 0;
       for (let i = 0; i < h_lines.rows; ++i) {
          // piano keyboard region is basically at the bottom half of the image, so "> mono.rows/2"
-        if (h_lines.data32S[i*4 + 1] < minY && h_lines.data32S[i*4 + 1] > mono.rows/2) {
+        if (h_lines.data32S[i*4 + 1] < minY && h_lines.data32S[i*4 + 1] > mono.rows/3) {
           minY = h_lines.data32S[i*4 + 1];
           min_index = i;
         }
-        if (h_lines.data32S[i*4 + 1] > maxY && h_lines.data32S[i*4 + 1] > mono.rows/2) {
+        if (h_lines.data32S[i*4 + 1] > maxY && h_lines.data32S[i*4 + 1] > mono.rows/3) {
           maxY = h_lines.data32S[i*4 + 1];
           max_index = i;
         }
@@ -165,7 +168,7 @@ Vue.component('scoring_component', {
       // thin out the lines
       for (let i = 0; i < pos_list.length - 1; ++i)
       {
-        if (Math.abs(pos_list[i][0] - pos_list[i + 1][0]) < 3) {
+        if (Math.abs(pos_list[i][0] - pos_list[i + 1][0]) < 8) {
           pos_list[i + 1][0] = (pos_list[i][0] + pos_list[i + 1][0]) / 2;
           pos_list[i + 1][1] = Math.max(pos_list[i][1], pos_list[i + 1][1]);
           pos_list.splice(i, 1); // remove index i value
@@ -175,7 +178,7 @@ Vue.component('scoring_component', {
 
       // 何らかの原因で飛ばされてしまった直線を補完する
       for (let i = 0; i < pos_list.length - 1; ++i) {
-        if (pos_list[i + 1][0] - pos_list[i][0] > (dst.cols / pos_list.length + 20)) {
+        if (pos_list[i + 1][0] - pos_list[i][0] > (dst.cols / pos_list.length + 10)) {
           pos_list.splice(i + 1, 0, [(pos_list[i][0] + pos_list[i + 1][0]) / 2, (pos_list[i][1] + pos_list[i + 1][1]) / 2]);
         }
       }
@@ -260,7 +263,7 @@ Vue.component('scoring_component', {
     startLoop(){
       let this_ = this;
       let video_body = document.getElementById("my-player_html5_api");
-      let canvas = document.getElementById('canvasOutput1');
+      let canvas = document.createElement('canvas');
       canvas.width = 1280;
       canvas.height = 720;
       var ctx = canvas.getContext('2d',{willReadFrequently: true});
