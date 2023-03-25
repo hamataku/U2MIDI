@@ -25,24 +25,25 @@ Vue.component('practice_component', {
       key_list: [],
       key_default_color: [],
       key_note_state: [],
-      octave: 2,
+      light: 0,
+      octave: 0,
       key_top: null,
     }
   },
   template:`
       <div id="practice_component" class="container">
         <div id="monitor">
-        <div id="monitorscreen">
-            <video
-            id="my-player"
-            class="video-js vjs-fluid"
-            controls
-            preload="auto"
-            playbackRates="[0.2, 0.5, 1, 1.5, 2]"
-            >
-              <source :src="'../' + data[1]" type="video/mp4"/>
-            </video>
-        </div>
+          <div id="monitorscreen">
+              <video
+              id="my-player"
+              class="video-js vjs-fluid"
+              controls
+              preload="auto"
+              playbackRates="[0.2, 0.5, 1, 1.5, 2]"
+              >
+                <source :src="'../' + data[1]" type="video/mp4"/>
+              </video>
+          </div>
         </div>
         <br>
         <table class="table table-borderless">
@@ -65,7 +66,15 @@ Vue.component('practice_component', {
               </td>
             </tr>
             <tr>
-              <th scope="row">オクターブ調整</th>
+              <th scope="row">光る位置の調整</th>
+              <td>
+                <button @click="lightDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                <span class="font-weight-normal px-2">{{light}}</span>
+                <button @click="lightUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">鍵盤のオクターブ調整</th>
               <td>
                 <button @click="octaveDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
                 <span class="font-weight-normal px-2">{{octave}}</span>
@@ -73,7 +82,7 @@ Vue.component('practice_component', {
               </td>
             </tr>
             <tr>
-              <th scope="row">練習モード<toggle-button v-model="practiceIsActive"></toggle-button></th>
+              <th scope="row">練習モード<toggle-button v-model="practiceIsActive" @change="practiceButton"></toggle-button></th>
               <td>
                 <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
                   <option selected :value="-1">MIDIキーボードを選択</option>
@@ -231,7 +240,7 @@ Vue.component('practice_component', {
       for (let i = 0; i < pos_list.length - 13; ++i)
       {
         if (pos_list[i][1] > threshold && pos_list[i + 5][1] > threshold && pos_list[i + 12][1] > threshold) {
-          standard = i % 12 + 1 - 3 * 12;
+          standard = i % 12 + 1 - 1 * 12;
           console.log("standard: ", standard);
           break;
         }
@@ -293,19 +302,33 @@ Vue.component('practice_component', {
       }
       this.Btime = now;
     },
-    octaveUp() {
-      this.octave += 1;
-      if (this.octave > 9) {
-        this.octave = 9;
+    lightUp() {
+      this.light += 1;
+      if (this.light > 5) {
+        this.light = 9;
       }
       this.clearAll();
     },
-    octaveDown() {
-      this.octave -= 1;
-      if (this.octave < 0) {
-        this.octave = 0;
+    lightDown() {
+      this.light -= 1;
+      if (this.light < -5) {
+        this.light = -5;
       }
       this.clearAll();
+    },
+    octaveUp() {
+      this.octave += 1;
+      if (this.octave > 5) {
+        this.octave = 9;
+      }
+      this.practiceNote = Array.from({ length: 128 }, () => false);
+    },
+    octaveDown() {
+      this.octave -= 1;
+      if (this.octave < -5) {
+        this.octave = -5;
+      }
+      this.practiceNote = Array.from({ length: 128 }, () => false);
     },
     slower(){
       this.setSpeed(this.playbackRate-0.05);
@@ -337,12 +360,16 @@ Vue.component('practice_component', {
         if (this.midiOutputIsReady) {
           this.outputDevice.send([0x90, note, 127]);
         }
-        this.practiceNote[note + this.octave * 12] = true;
       } else {
         if (this.midiOutputIsReady) {
           this.outputDevice.send([0x80, note, 0]);
         }
       }
+    },
+    practiceButton() {
+      this.video_object.playbackRate(this.playbackRate);
+      this.practiceNote = Array.from({ length: 128 }, () => false);
+      this.clearAll();
     },
     practiceCheck() {
       //練習モード
@@ -355,9 +382,9 @@ Vue.component('practice_component', {
           }
         }
         if (isAllOff) {
-          this.video_object.play();
+          this.video_object.playbackRate(this.playbackRate);
         } else {
-          this.video_object.pause();
+          this.video_object.playbackRate(0);
         }
       }
     },
@@ -375,23 +402,22 @@ Vue.component('practice_component', {
         } else {
           let now = this_.video_object.currentTime();
 
-          if (now > 0.5) {
-            ctx.drawImage(video_body, 0, 0);
-            for (let i = 0; i < this_.key_list.length; ++i) {
-              var imageData = ctx.getImageData(this_.key_list[i][0], this_.key_top + 80, 1, 1);
-              let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
-              if (Math.abs(color - this_.key_default_color[i]) > 50) {
-                if (!this_.key_note_state[i]) {
-                  this_.key_note_state[i] = true;
-                  this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
-                  console.log("Note on:  ", this_.key_list[i][1]);
-                }
-              } else {
-                if (this_.key_note_state[i]) {
-                  this_.key_note_state[i] = false;
-                  this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, false);
-                  console.log("Note off: ", this_.key_list[i][1]);
-                }
+          ctx.drawImage(video_body, 0, 0);
+          for (let i = 0; i < this_.key_list.length; ++i) {
+            var imageData = ctx.getImageData(this_.key_list[i][0], this_.key_top + 80, 1, 1);
+            let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
+            if (Math.abs(color - this_.key_default_color[i]) > 50) {
+              if (!this_.key_note_state[i]) {
+                this_.key_note_state[i] = true;
+                this_.uplightSend(this_.key_list[i][1] + this_.light * 12, true);
+                console.log("Note on:  ", this_.key_list[i][1]);
+                this_.practiceNote[this_.key_list[i][1]] = true;
+              }
+            } else {
+              if (this_.key_note_state[i]) {
+                this_.key_note_state[i] = false;
+                this_.uplightSend(this_.key_list[i][1] + this_.light * 12, false);
+                console.log("Note off: ", this_.key_list[i][1]);
               }
             }
           }
@@ -457,15 +483,19 @@ Vue.component('practice_component', {
       this.inputDevice = this.inputDevices[input.target.value];
       console.log(this.inputDevice.name + " is selected");
       this.inputDevice.onmidimessage = (event) => {
+        let note = event.data[1] + this.octave * 12;
+        if (note < 0 || note > 127) {
+          return;
+        }
         if (event.data[0] == 0x90) {
           if (event.data[2] == 0) {
-            console.log("Input Note off: ", event.data[1]);
+            console.log("Input Note off: ", note);
           } else {
-            console.log("Input Note on:  ", event.data[1]);
-            this.practiceNote[event.data[1]] = false;
+            console.log("Input Note on:  ", note);
+            this.practiceNote[note] = false;
           }
         } else if (event.data[0] == 0x80) {
-          console.log("Input Note off: ", event.data[1]);
+          console.log("Input Note off: ", note);
         }
       };
     }

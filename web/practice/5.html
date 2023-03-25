@@ -11,7 +11,7 @@
   <body>
     <div id="app">
       <vue_navbar></vue_navbar>
-      <practice_component :data="video_lists[5]"></practice_component>
+      <practice_component :data="video_data"></practice_component>
       <vue_footer></vue_footer>
     </div>
 
@@ -35,21 +35,12 @@
     <script src="../components/footer.js"></script>
     <script src="../components/practice_component.js"></script>
 
-    <!--practice.jsの内容はpractice_component.jsの中に統合しました-->
-    <!-- <script src="./practice.js"></script> -->
     <script>
       Vue.use(window["vue-js-toggle-button"].default);
       new Vue({
         el: "#app",
         data: {
-          video_lists: [
-            ["きらきら星", "videos/beginner/kirakira_boshi.mp4", "videos/beginner/kirakira_boshi.png"],
-            ["さんぽ", "videos/beginner/sanpo.mp4", "videos/beginner/sanpo.png"],
-            ["かえるのうた", "videos/intermediate/kaeru_no_uta.mp4", "videos/intermediate/kaeru_no_uta.png"],
-            ["となりのトトロ", "videos/intermediate/tonari_no_totoro.mp4", "videos/intermediate/tonari_no_totoro.png"],
-            ["ビリーブ", "videos/advanced/believe.mp4", "videos/advanced/believe.png"],
-            ["カントリーロード", "videos/advanced/country_road.mp4", "videos/advanced/country_road.png"],
-          ],
+          video_data: ["カントリーロード", "videos/advanced/country_road.mp4", "videos/advanced/country_road.png"]
         }
       });
     </script>
