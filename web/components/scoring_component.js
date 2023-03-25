@@ -123,7 +123,7 @@ Vue.component('scoring_component', {
     sampleClick() {
       this.setSrc("./sample.mp4");
     },
-lightUp() {
+    lightUp() {
       this.light += 1;
       if (this.light > 5) {
         this.light = 9;
