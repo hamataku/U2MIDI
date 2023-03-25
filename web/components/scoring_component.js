@@ -22,7 +22,7 @@ Vue.component('scoring_component', {
       key_default_color: [],
       key_note_state: [],
       key_top: null,
-      octave: 4,
+      octave: 2,
 
       song_finished: false,
     }
@@ -130,12 +130,13 @@ Vue.component('scoring_component', {
       }
 
       this.key_top = minY;
+      console.log(minY);
 
       // cut out the keyboard region
       let rect = new cv.Rect(
-        h_lines.data32S[min_index * 4],
+        0,
         h_lines.data32S[min_index * 4 + 1],
-        h_lines.data32S[max_index * 4 + 2] - h_lines.data32S[max_index * 4],
+        width,
         (h_lines.data32S[max_index * 4 + 1] - h_lines.data32S[min_index * 4 + 1]) * 7 / 9
       ); //(x, y, width, height), multiply by 7/9 to avoid katakana.
       
@@ -169,6 +170,13 @@ Vue.component('scoring_component', {
           pos_list[i + 1][1] = Math.max(pos_list[i][1], pos_list[i + 1][1]);
           pos_list.splice(i, 1); // remove index i value
           i -= 1;
+        }
+      }
+
+      // 何らかの原因で飛ばされてしまった直線を補完する
+      for (let i = 0; i < pos_list.length - 1; ++i) {
+        if (pos_list[i + 1][0] - pos_list[i][0] > (dst.cols / pos_list.length + 20)) {
+          pos_list.splice(i + 1, 0, [(pos_list[i][0] + pos_list[i + 1][0]) / 2, (pos_list[i][1] + pos_list[i + 1][1]) / 2]);
         }
       }
 
@@ -264,7 +272,7 @@ Vue.component('scoring_component', {
 
           ctx.drawImage(video_body, 0, 0);
           for (let i = 0; i < this_.key_list.length; ++i) {
-            var imageData = ctx.getImageData(this_.key_list[i][0], this_.key_top + 20, 1, 1);
+            var imageData = ctx.getImageData(this_.key_list[i][0], this_.key_top + 80, 1, 1);
             let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
             if (Math.abs(color - this_.key_default_color[i]) > 50) {
               if (!this_.key_note_state[i]){

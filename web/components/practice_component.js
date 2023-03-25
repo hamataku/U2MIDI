@@ -25,7 +25,7 @@ Vue.component('practice_component', {
       key_list: [],
       key_default_color: [],
       key_note_state: [],
-      octave: 4,
+      octave: 2,
       key_top: null,
     }
   },
@@ -162,11 +162,11 @@ Vue.component('practice_component', {
       let max_index = 0;
       for (let i = 0; i < h_lines.rows; ++i) {
          // piano keyboard region is basically at the bottom half of the image, so "> mono.rows/2"
-        if (h_lines.data32S[i*4 + 1] < minY && h_lines.data32S[i*4 + 1] > mono.rows/2) {
+        if (h_lines.data32S[i*4 + 1] < minY && h_lines.data32S[i*4 + 1] > mono.rows/3) {
           minY = h_lines.data32S[i*4 + 1];
           min_index = i;
         }
-        if (h_lines.data32S[i*4 + 1] > maxY && h_lines.data32S[i*4 + 1] > mono.rows/2) {
+        if (h_lines.data32S[i*4 + 1] > maxY && h_lines.data32S[i*4 + 1] > mono.rows/3) {
           maxY = h_lines.data32S[i*4 + 1];
           max_index = i;
         }
@@ -208,11 +208,18 @@ Vue.component('practice_component', {
       // thin out the lines
       for (let i = 0; i < pos_list.length - 1; ++i)
       {
-        if (Math.abs(pos_list[i][0] - pos_list[i + 1][0]) < 3) {
+        if (Math.abs(pos_list[i][0] - pos_list[i + 1][0]) < 8) {
           pos_list[i + 1][0] = (pos_list[i][0] + pos_list[i + 1][0]) / 2;
           pos_list[i + 1][1] = Math.max(pos_list[i][1], pos_list[i + 1][1]);
           pos_list.splice(i, 1); // remove index i value
           i -= 1;
+        }
+      }
+
+      // 何らかの原因で飛ばされてしまった直線を補完する
+      for (let i = 0; i < pos_list.length - 1; ++i) {
+        if (pos_list[i + 1][0] - pos_list[i][0] > (dst.cols / pos_list.length + 10)) {
+          pos_list.splice(i + 1, 0, [(pos_list[i][0] + pos_list[i + 1][0]) / 2, (pos_list[i][1] + pos_list[i + 1][1]) / 2]);
         }
       }
 
