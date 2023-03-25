@@ -7,7 +7,7 @@ new Vue({
     ["かえるのうた", "videos/intermediate/kaeru_no_uta.mp4", "videos/intermediate/kaeru_no_uta.png"],
     ["となりのトトロ", "videos/intermediate/tonari_no_totoro.mp4", "videos/intermediate/tonari_no_totoro.png"],
     ["ビリーブ", "videos/advanced/believe.mp4", "videos/advanced/believe.png"],
-    ["夢をかなえてドラえもん", "videos/advanced/yumewo_kanaete_doraemon.mp4", "videos/advanced/yumewo_kanaete_doraemon.png"],
+    ["カントリーロード", "videos/advanced/country_road.mp4", "videos/advanced/country_road.png"],
     ],
     beginner_list: [0,1],
     intermediate_list: [2,3],

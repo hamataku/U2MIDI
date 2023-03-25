@@ -26,6 +26,7 @@ Vue.component('practice_component', {
       key_default_color: [],
       key_note_state: [],
       octave: 4,
+      key_top: null,
     }
   },
   template:`
@@ -171,11 +172,14 @@ Vue.component('practice_component', {
         }
       }
 
+      this.key_top = minY;
+      console.log(minY);
+
       // cut out the keyboard region
       let rect = new cv.Rect(
-        h_lines.data32S[min_index * 4],
+        0,
         h_lines.data32S[min_index * 4 + 1],
-        h_lines.data32S[max_index * 4 + 2] - h_lines.data32S[max_index * 4],
+        width,
         (h_lines.data32S[max_index * 4 + 1] - h_lines.data32S[min_index * 4 + 1]) * 7 / 9
       ); //(x, y, width, height), multiply by 7/9 to avoid katakana.
       
@@ -362,21 +366,23 @@ Vue.component('practice_component', {
         } else {
           let now = this_.video_object.currentTime();
 
-          ctx.drawImage(video_body, 0, 0);
-          for (let i = 0; i < this_.key_list.length; ++i) {
-            var imageData = ctx.getImageData(this_.key_list[i][0], 630, 1, 1);
-            let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
-            if (Math.abs(color - this_.key_default_color[i]) > 50) {
-              if (!this_.key_note_state[i]){
-                this_.key_note_state[i] = true;
-                this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
-                console.log("Note on:  ", this_.key_list[i][1]);
-              }
-            } else {
-              if (this_.key_note_state[i]){
-                this_.key_note_state[i] = false;
-                this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, false);
-                console.log("Note off: ", this_.key_list[i][1]);
+          if (now > 0.5) {
+            ctx.drawImage(video_body, 0, 0);
+            for (let i = 0; i < this_.key_list.length; ++i) {
+              var imageData = ctx.getImageData(this_.key_list[i][0], this_.key_top + 80, 1, 1);
+              let color = Math.floor((imageData.data[0] + imageData.data[1] + imageData.data[2]) / 3);
+              if (Math.abs(color - this_.key_default_color[i]) > 50) {
+                if (!this_.key_note_state[i]) {
+                  this_.key_note_state[i] = true;
+                  this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
+                  console.log("Note on:  ", this_.key_list[i][1]);
+                }
+              } else {
+                if (this_.key_note_state[i]) {
+                  this_.key_note_state[i] = false;
+                  this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, false);
+                  console.log("Note off: ", this_.key_list[i][1]);
+                }
               }
             }
           }
