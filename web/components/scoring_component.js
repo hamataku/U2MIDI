@@ -16,52 +16,101 @@ Vue.component('scoring_component', {
       inputDevices: [],
       inputDevice: null,
       midiObserverId: null,
-      practiceNote: Array.from({ length: 128 }, () => false),
 
       key_list: [],
       key_default_color: [],
       key_note_state: [],
+      key_score_state: Array.from({ length: 128 }, () => false),
       key_top: null,
-      octave: 2,
+      light: 0,
+      octave: 0,
+      key_note_count: 0,
+      key_correct_count: 0,
+      score: 0,
+      good: false,
+      miss: false,
 
       song_finished: false,
     }
   },
   template:`
-      <div id="scoring_component" class="container">
-        <div id="monitor">
-          <div id="monitorscreen">
-              <video
-              id="my-player"
-              class="video-js vjs-fluid"
-              preload="auto"
-              playbackRates="[0.2, 0.5, 1, 1.5, 2]"
-              >
-                <source :src="'../' + data[1]" type="video/mp4"/>
-              </video>
+      <div>
+        <div id="scoring_component" class="container">
+          <div id="monitor">
+            <div id="monitorscreen">
+                <video
+                id="my-player"
+                class="video-js vjs-fluid"
+                preload="auto"
+                playbackRates="[0.2, 0.5, 1, 1.5, 2]"
+                >
+                  <source :src="'../' + data[1]" type="video/mp4"/>
+                </video>
+            </div>
           </div>
-        </div>
-        <div class="d-grid gap-2 d-md-block">
-          <button class="btn btn-primary" type="button" @click="startSong()">開始</button>
-        </div>
-        <p v-if="song_finished">採点結果を表示</p>
+          <div class="text-center" style="height: 60px;" v-show="!song_finished">
+            <p v-show="good" class="good">Good!</p>
+            <p v-show="miss" class="miss">miss...</p>
+          </div>
+          <div v-show="song_finished" class="text-center">
+            <p><span class="score">{{ score }}</span>点</p>
+            <p class="score_info">{{ key_correct_count }} / {{ key_note_count }}</p>
+            <a href="../index.html"><button type="button" class="btn btn-primary">メニューに戻る</button></a>
+            <button type="button" class="btn btn-secondary" @click="retry">　　もう一度　　</button>
+          </div>
+          <table class="table table-borderless" v-show="!song_finished">
+            <tbody>
+              <tr>
+                <th scope="row">光る位置の調整</th>
+                <td>
+                  <button @click="lightDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                  <span class="font-weight-normal px-2">{{light}}</span>
+                  <button @click="lightUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                </td>
+              </tr>
+              <tr>
+              <th scope="row">鍵盤のオクターブ調整</th>
+                <td>
+                  <button @click="octaveDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                  <span class="font-weight-normal px-2">{{octave}}</span>
+                  <button @click="octaveUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">キーボード</th>
+                <td>
+                  <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
+                    <option selected :value="-1">MIDIキーボードを選択</option>
+                    <option v-for="(input, index) in inputDevices" :value="index">
+                      {{input.name}}
+                    </option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="d-grid gap-2 d-md-block">
+            <button v-show="!song_finished" class="btn btn-primary" type="button" @click="startSong()">開始</button>
+          </div>
 
-        <div class="accordion accordion-flush" id="accordionFlushExample">
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="flush-headingOne">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
-                キーボード認識結果
-              </button>
-            </h2>
-            <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
-              <div class="accordion-body">
-                <canvas class="keyboard-output" id="canvasOutput1"></canvas>
-                <canvas class="keyboard-output" id="canvasOutput2"></canvas>
+          <div class="accordion accordion-flush" id="accordionFlushExample" v-show="!song_finished">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="flush-headingOne">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                  キーボード認識結果
+                </button>
+              </h2>
+              <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                <div class="accordion-body">
+                  <canvas class="keyboard-output" id="canvasOutput1"></canvas>
+                  <canvas class="keyboard-output" id="canvasOutput2"></canvas>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>`,
+      </div>`
+  ,
   methods: {
     check(text){
       console.log(text);
@@ -73,6 +122,32 @@ Vue.component('scoring_component', {
     },
     sampleClick() {
       this.setSrc("./sample.mp4");
+    },
+lightUp() {
+      this.light += 1;
+      if (this.light > 5) {
+        this.light = 9;
+      }
+      this.clearAll();
+    },
+    lightDown() {
+      this.light -= 1;
+      if (this.light < -5) {
+        this.light = -5;
+      }
+      this.clearAll();
+    },
+    octaveUp() {
+      this.octave += 1;
+      if (this.octave > 5) {
+        this.octave = 9;
+      }
+    },
+    octaveDown() {
+      this.octave -= 1;
+      if (this.octave < -5) {
+        this.octave = -5;
+      }
     },
     setSrc(filename) {
       this.video_object.src(filename);
@@ -189,7 +264,7 @@ Vue.component('scoring_component', {
       for (let i = 0; i < pos_list.length - 13; ++i)
       {
         if (pos_list[i][1] > threshold && pos_list[i + 5][1] > threshold && pos_list[i + 12][1] > threshold) {
-          standard = i % 12 + 1 - 3 * 12;
+          standard = i % 12 + 1 - 1 * 12;
           console.log("standard: ", standard);
           break;
         }
@@ -237,6 +312,16 @@ Vue.component('scoring_component', {
       color_dst.delete();
       this.video_show = true;
     },
+    retry() {
+      this.song_finished = false;
+      this.key_score_state = Array.from({ length: 128 }, () => false);
+      this.key_note_count = 0;
+      this.key_correct_count = 0;
+      this.video_object.currentTime(0);
+      this.video_object.pause();
+      this.good = false;
+      this.bad = false;
+    },
     clearAll() {
       for (let i = 0; i < 128; ++i) {
         this.uplightSend(i, false);
@@ -250,7 +335,6 @@ Vue.component('scoring_component', {
         if (this.midiOutputIsReady) {
           this.outputDevice.send([0x90, note, 127]);
         }
-        this.practiceNote[note + this.octave * 12] = true;
       } else {
         if (this.midiOutputIsReady) {
           this.outputDevice.send([0x80, note, 0]);
@@ -280,17 +364,28 @@ Vue.component('scoring_component', {
             if (Math.abs(color - this_.key_default_color[i]) > 50) {
               if (!this_.key_note_state[i]){
                 this_.key_note_state[i] = true;
-                this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, true);
+                this_.uplightSend(this_.key_list[i][1] + this_.light * 12, true);
                 console.log("Note on:  ", this_.key_list[i][1]);
+                this_.key_score_state[this_.key_list[i][1]] = true;
+                this_.key_note_count++;
               }
             } else {
               if (this_.key_note_state[i]){
                 this_.key_note_state[i] = false;
-                this_.uplightSend(this_.key_list[i][1] - this_.octave * 12, false);
+                this_.uplightSend(this_.key_list[i][1] + this_.light * 12, false);
+                if (this_.key_score_state[this_.key_list[i][1]]) {
+                  this_.good = false;
+                  this_.miss = true;
+                } else {
+                  this_.good = false;
+                  this_.miss = false;
+                }
+                this_.key_score_state[this_.key_list[i][1]] = false;
                 console.log("Note off: ", this_.key_list[i][1]);
               }
             }
           }
+          this_.score = Math.floor(this_.key_correct_count / this_.key_note_count * 100);
 
         }
         requestAnimationFrame(loop);
@@ -332,7 +427,6 @@ Vue.component('scoring_component', {
       });
     },
     setInputDevice(input) {
-      this.practiceNote = Array.from({ length: 128 }, () => false);
       if (input.target.value == -1) {
         this.inputDevice.onmidimessage = (event) => {
         };
@@ -342,15 +436,24 @@ Vue.component('scoring_component', {
       this.inputDevice = this.inputDevices[input.target.value];
       console.log(this.inputDevice.name + " is selected");
       this.inputDevice.onmidimessage = (event) => {
+        let note = event.data[1] + this.octave * 12;
+        if (note < 0 || note > 127) {
+          return;
+        }
         if (event.data[0] == 0x90) {
           if (event.data[2] == 0) {
-            console.log("Input Note off: ", event.data[1]);
+            console.log("Input Note off: ", note);
           } else {
-            console.log("Input Note on:  ", event.data[1]);
-            this.practiceNote[event.data[1]] = false;
+            console.log("Input Note on:  ", note);
+            if (this.key_score_state[note]) {
+              this.key_correct_count++;
+              this.key_score_state[note] = false;
+              this.good = true;
+              this.miss = false;
+            }
           }
         } else if (event.data[0] == 0x80) {
-          console.log("Input Note off: ", event.data[1]);
+          console.log("Input Note off: ", note);
         }
       };
     }

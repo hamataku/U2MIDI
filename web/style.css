@@ -153,6 +153,26 @@ nav, footer {
 	overflow: hidden;
 }
 
+.good {
+  color: skyblue;
+  font-size: 40px;
+}
+
+.miss {
+  color: red;
+  font-size: 40px;
+}
+
+.score {
+  color: black;
+  font-size: 90px;
+}
+
+.score_info {
+  color: black;
+  font-size: 20px;
+}
+
 
 @media all and (min-width: 960px) {
 	#monitor {
