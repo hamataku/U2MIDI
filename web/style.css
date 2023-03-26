@@ -159,6 +159,17 @@ nav, footer {
 	overflow: hidden;
 }
 
+#uploadarea {
+  width: 60vw;
+  height: 40vw;
+  border: 2px dashed var(--black-30);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 4px auto;
+}
+
 .good {
   color: skyblue;
   font-size: 40px;

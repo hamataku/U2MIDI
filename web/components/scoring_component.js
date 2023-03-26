@@ -150,7 +150,7 @@ Vue.component('scoring_component', {
       }
     },
     setSrc(filename) {
-      this.video_object.src(filename);
+      this.video_object.src({ type: "video/mp4", src: filename });
       this.video_object.load();
       this.video_src_is_set = true;
       this.video_object.on("loadeddata", () => {
@@ -461,7 +461,7 @@ Vue.component('scoring_component', {
   mounted() {
     this.video_object = videojs("my-player");
     this.video_object.ready(() => {
-      this.setSrc('../' + this.data[1]);
+      this.setSrc(this.data[1]);
       this.startLoop();      
     });
 

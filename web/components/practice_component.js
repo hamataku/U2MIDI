@@ -132,7 +132,7 @@ Vue.component('practice_component', {
       this.setSrc("./sample.mp4");
     },
     setSrc(filename) {
-      this.video_object.src(filename);
+      this.video_object.src({ type: "video/mp4", src: filename });
       this.video_object.load();
       this.video_src_is_set = true;
       this.video_object.on("loadeddata", () => {
@@ -534,7 +534,7 @@ Vue.component('practice_component', {
       p.appendChild(marker_a);
       p.appendChild(marker_b);
 
-      this.setSrc('../' + this.data[1]);
+      this.setSrc(this.data[1]);
       this.startLoop();      
     });
 
