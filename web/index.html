@@ -12,16 +12,24 @@
     <div id="app">
       <vue_navbar></vue_navbar>
       <div class="container">
-        <video_list :list="beginner_list" :video_lists="video_lists" title="かんたん"></video_list>
-        <video_list :list="intermediate_list" :video_lists="video_lists" title="ふつう"></video_list>
-        <video_list :list="advanced_list" :video_lists="video_lists" title="むずかしい"></video_list>
 
-        <h2 class="pt-2">動画をアップロードして演奏する</h2>
-        <a href="practice/custom.html" class="btn btn-primary m-1">練習モード</a>
-        <a href="scoring/custom.html" class="btn btn-primary m-1">採点モード</a>
+        <div class="text-center m-4">
+          <h2 class="pt-2 border-bottom border-primary border-2 my-2 mx-auto px-4" style="width: fit-content;">難易度別に練習する</h2>
+          <video_list :list="beginner_list" :video_lists="video_lists" title="かんたん"></video_list>
+          <video_list :list="intermediate_list" :video_lists="video_lists" title="ふつう"></video_list>
+          <video_list :list="advanced_list" :video_lists="video_lists" title="むずかしい"></video_list>
+        </div>
 
-        <h2 class="pt-2">オンラインでセッションする</h2>
-        <a href="video.html" class="btn btn-primary m-1">参加する</a>
+        <div class="text-center m-4">
+          <h2 class="pt-2 border-bottom border-primary border-2 my-2 mx-auto px-4" style="width: fit-content;">動画をアップロードして演奏する</h2>
+          <a href="practice/custom.html" class="btn btn-primary m-1">練習モード</a>
+          <a href="scoring/custom.html" class="btn btn-success m-1">採点モード</a>
+        </div>
+
+        <div class="text-center m-4">
+          <h2 class="pt-2 border-bottom border-primary border-2 my-2 mx-auto px-4" style="width: fit-content;">オンラインでセッションする</h2>
+          <a href="video.html" class="btn btn-primary m-1">参加する</a>
+        </div>
       </div>
       <vue_footer></vue_footer>
     </div>

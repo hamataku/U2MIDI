@@ -54,6 +54,10 @@ nav, footer {
   display: inline-block;
 }
 
+h2 {
+  margin: 4px;
+}
+
 #keyboard li:first-child {
   border-radius: 5px 0 5px 5px;
 }
