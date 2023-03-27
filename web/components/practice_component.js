@@ -277,7 +277,7 @@ Vue.component('practice_component', {
       {
         let startPoint = new cv.Point(pos_list[i][0], 0);
         let endPoint = new cv.Point(pos_list[i][0], pos_list[i][1]);
-        cv.line(color_dst, startPoint, endPoint, color);
+        cv.line(color_dst, startPoint, endPoint, color, 4);
       }
       cv.imshow('canvasOutput2', color_dst);
       
