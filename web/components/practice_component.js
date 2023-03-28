@@ -32,89 +32,93 @@ Vue.component('practice_component', {
   },
   template:`
       <div id="practice_component" class="container">
-        <div id="monitor">
-          <div id="monitorscreen">
-              <video
-              id="my-player"
-              class="video-js vjs-fluid"
-              controls
-              preload="auto"
-              playbackRates="[0.2, 0.5, 1, 1.5, 2]"
-              >
-                <source :src="'../' + data[1]" type="video/mp4"/>
-              </video>
-          </div>
-        </div>
-        <div class="bar bar-1">
-          <div class='bar-led' v-for="n in 12 " :id="'num'+(n-1)" :key="n"></div>
-        </div>
-        <div class="bar bar-2">
-          <div class='bar-led' v-for="n in 12 " :id="'num'+(n+11)" :key="n+12"></div>
-        </div>
-        <div class="bar bar-3">
-          <div class='bar-led' v-for="n in 12 " :id="'num'+(n+23)" :key="n+24"></div>
-        </div>
-        <br>
-        <table class="table table-borderless">
-          <tbody>
-            <tr>
-              <th scope="row">再生速度</th>
-              <td>
-                <button @click="slower()" class="btn btn-outline-secondary btn-sm px-2">ー</button>
-                <span class="font-weight-normal px-2">×{{Math.round(playbackRate*100)/100}}</span>
-                <button @click="faster()" class="btn btn-outline-secondary btn-sm px-2">＋</button>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">AB再生<toggle-button v-model="ABisActive"></toggle-button></th>
-              <td>
-                <button @click="restart" class="btn btn-outline-secondary btn-sm">＜</button>
-                <button @click="setA" class="btn btn-dark btn-sm">A</button>
-                <button @click="setB" class="btn btn-dark btn-sm">B</button>
-                <button @click="toend" class="btn btn-outline-secondary btn-sm">＞</button>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">光る位置の調整</th>
-              <td>
-                <button @click="lightDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
-                <span class="font-weight-normal px-2">{{light}}</span>
-                <button @click="lightUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">鍵盤のオクターブ調整</th>
-              <td>
-                <button @click="octaveDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
-                <span class="font-weight-normal px-2">{{octave}}</span>
-                <button @click="octaveUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">練習モード<toggle-button v-model="practiceIsActive" @change="practiceButton"></toggle-button></th>
-              <td>
-                <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
-                  <option selected :value="-1">MIDIキーボードを選択</option>
-                  <option v-for="(input, index) in inputDevices" :value="index">
-                    {{input.name}}
-                  </option>
-                </select>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="row">
+          <div class="col-md-8 offset-md-2">
+            <div id="monitor">
+              <div id="monitorscreen">
+                  <video
+                  id="my-player"
+                  class="video-js vjs-fluid"
+                  controls
+                  preload="auto"
+                  playbackRates="[0.2, 0.5, 1, 1.5, 2]"
+                  >
+                    <source :src="'../' + data[1]" type="video/mp4"/>
+                  </video>
+              </div>
+            </div>
+            <div class="bar bar-1">
+              <div class='bar-led' v-for="n in 12 " :id="'num'+(n-1)" :key="n"></div>
+            </div>
+            <div class="bar bar-2">
+              <div class='bar-led' v-for="n in 12 " :id="'num'+(n+11)" :key="n+12"></div>
+            </div>
+            <div class="bar bar-3">
+              <div class='bar-led' v-for="n in 12 " :id="'num'+(n+23)" :key="n+24"></div>
+            </div>
+            <br>
+            <table class="table table-borderless">
+              <tbody>
+                <tr>
+                  <th scope="row">再生速度</th>
+                  <td>
+                    <button @click="slower()" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                    <span class="font-weight-normal px-2">×{{Math.round(playbackRate*100)/100}}</span>
+                    <button @click="faster()" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">AB再生<toggle-button v-model="ABisActive"></toggle-button></th>
+                  <td>
+                    <button @click="restart" class="btn btn-outline-secondary btn-sm">＜</button>
+                    <button @click="setA" class="btn btn-dark btn-sm">A</button>
+                    <button @click="setB" class="btn btn-dark btn-sm">B</button>
+                    <button @click="toend" class="btn btn-outline-secondary btn-sm">＞</button>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">光る位置の調整</th>
+                  <td>
+                    <button @click="lightDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                    <span class="font-weight-normal px-2">{{light}}</span>
+                    <button @click="lightUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">鍵盤のオクターブ調整</th>
+                  <td>
+                    <button @click="octaveDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                    <span class="font-weight-normal px-2">{{octave}}</span>
+                    <button @click="octaveUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">練習モード<toggle-button v-model="practiceIsActive" @change="practiceButton"></toggle-button></th>
+                  <td>
+                    <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
+                      <option selected :value="-1">MIDIキーボードを選択</option>
+                      <option v-for="(input, index) in inputDevices" :value="index">
+                        {{input.name}}
+                      </option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-        <div class="accordion accordion-flush" id="accordionFlushExample">
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="flush-headingOne">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
-                キーボード認識結果
-              </button>
-            </h2>
-            <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
-              <div class="accordion-body">
-                <canvas class="keyboard-output" id="canvasOutput1"></canvas>
-                <canvas class="keyboard-output" id="canvasOutput2"></canvas>
+            <div class="accordion accordion-flush" id="accordionFlushExample">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="flush-headingOne">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                    キーボード認識結果
+                  </button>
+                </h2>
+                <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                  <div class="accordion-body">
+                    <canvas class="keyboard-output" id="canvasOutput1"></canvas>
+                    <canvas class="keyboard-output" id="canvasOutput2"></canvas>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
