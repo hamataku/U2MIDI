@@ -58,6 +58,15 @@ Vue.component('scoring_component', {
             <a href="../index.html"><button type="button" class="btn btn-primary">メニューに戻る</button></a>
             <button type="button" class="btn btn-secondary" @click="retry">　　もう一度　　</button>
           </div>
+          <div class="bar bar-1">
+            <div class='bar-led' v-for="n in 12 " :id="'num'+(n-1)" :key="n"></div>
+          </div>
+          <div class="bar bar-2">
+            <div class='bar-led' v-for="n in 12 " :id="'num'+(n+11)" :key="n+12"></div>
+          </div>
+          <div class="bar bar-3">
+            <div class='bar-led' v-for="n in 12 " :id="'num'+(n+23)" :key="n+24"></div>
+          </div>
           <table class="table table-borderless" v-show="!song_finished">
             <tbody>
               <tr>
@@ -236,6 +245,9 @@ Vue.component('scoring_component', {
       for (let i = 0; i < lines.rows; ++i) // (x1, y1, x2, y2) for each line
       {
         // only extract "x1" and "y1"
+        if (lines.data32S[i * 4] < 8) {
+          continue;
+        }
         pos_list.push([lines.data32S[i * 4], lines.data32S[i * 4 + 1]]);
       }
       pos_list.sort(function (a, b) { return (a[0] - b[0]); });
@@ -274,7 +286,7 @@ Vue.component('scoring_component', {
       for (let i = 0; i < pos_list.length + 1; ++i)
       {
         if (i == 0) {
-          this.key_list.push([Math.floor(pos_list[i][0] / 2), i - standard]);
+          this.key_list.push([Math.floor(pos_list[i][0] / 3 * 2), i - standard]);
         } else if (i == pos_list.length) {
           this.key_list.push([Math.floor((pos_list[i - 1][0] + dst.cols) / 2), i - standard]);
         } else {
@@ -335,10 +347,23 @@ Vue.component('scoring_component', {
         if (this.midiOutputIsReady) {
           this.outputDevice.send([0x90, note, 127]);
         }
+        if (note >= 35) {
+          return;
+        }
+        let rem = note % 12;
+        if (rem == 0 || rem == 2 || rem == 4 || rem == 5 || rem == 7 || rem == 9 || rem == 11) {
+          document.getElementById("num" + note).style.backgroundColor = "#f00";
+        } else {
+          document.getElementById("num" + note).style.backgroundColor = "aqua";
+        }
       } else {
         if (this.midiOutputIsReady) {
           this.outputDevice.send([0x80, note, 0]);
         }
+        if (note >= 35) {
+          return;
+        }
+        document.getElementById("num" + note).style.backgroundColor = "white";
       }
     },
     startSong(){
@@ -392,39 +417,43 @@ Vue.component('scoring_component', {
       }());
     },
     midiObserver() {
-      navigator.requestMIDIAccess().then(
-      (midiAccess) => {
-        //成功
-        try {
-          if (this.inputDevices.length == 0) {
-            var inputIterator = midiAccess.inputs.values();
-            for (var i = inputIterator.next(); !i.done; i = inputIterator.next()) {
-              if (!i.value.name.match(/Uplight/)) {
-                this.inputDevices.push(i.value);
-                return;
+      try {
+        navigator.requestMIDIAccess().then(
+          (midiAccess) => {
+            //成功
+            try {
+              if (this.inputDevices.length == 0) {
+                var inputIterator = midiAccess.inputs.values();
+                for (var i = inputIterator.next(); !i.done; i = inputIterator.next()) {
+                  if (!i.value.name.match(/Uplight/)) {
+                    this.inputDevices.push(i.value);
+                    return;
+                  }
+                }
               }
+              var outputIterator = midiAccess.outputs.values();
+              for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
+                if (o.value.name.match(/Uplight/)) {
+                  this.outputDevice = o.value;
+                  console.log(this.outputDevice.name);
+                  this.midiOutputIsReady = true;
+                  this.clearAll();
+                  clearInterval(this.midiObserverId);
+                  return;
+                }
+              }
+              console.log("cannot find Uplight");
+            } catch (e) {
+              console.log("cannot find MIDI device");
             }
-          }
-          var outputIterator = midiAccess.outputs.values();
-          for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
-            if (o.value.name.match(/Uplight/)) {
-              this.outputDevice = o.value;
-              console.log(this.outputDevice.name);
-              this.midiOutputIsReady = true;
-              this.clearAll();
-              clearInterval(this.midiObserverId);
-              return;
-            }
-          } 
-          console.log("cannot find Uplight");
-        } catch (e) {
-          console.log("cannot find MIDI device");
-        }
-      },
-      (msg) => {
-        //失敗
-        console.log("Failed to get MIDI access - " + msg);
-      });
+          },
+          (msg) => {
+            //失敗
+            console.log("Failed to get MIDI access - " + msg);
+          });
+      } catch (e) {
+        console.log("cannot find MIDI device");
+      }
     },
     setInputDevice(input) {
       if (input.target.value == -1) {

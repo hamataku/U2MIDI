@@ -119,39 +119,43 @@ new Vue({
       }
     },
     midiObserver() {
-      navigator.requestMIDIAccess().then(
-      (midiAccess) => {
-        //成功
-        try {
-          if (this.inputDevices.length == 0) {
-            var inputIterator = midiAccess.inputs.values();
-            for (var i = inputIterator.next(); !i.done; i = inputIterator.next()) {
-              if (!i.value.name.match(/Uplight/)) {
-                this.inputDevices.push(i.value);
-                return;
+      try {
+        navigator.requestMIDIAccess().then(
+        (midiAccess) => {
+          //成功
+          try {
+            if (this.inputDevices.length == 0) {
+              var inputIterator = midiAccess.inputs.values();
+              for (var i = inputIterator.next(); !i.done; i = inputIterator.next()) {
+                if (!i.value.name.match(/Uplight/)) {
+                  this.inputDevices.push(i.value);
+                  return;
+                }
               }
             }
+            var outputIterator = midiAccess.outputs.values();
+            for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
+              if (o.value.name.match(/Uplight/)) {
+                this.outputDevice = o.value;
+                console.log(this.outputDevice.name);
+                this.midiOutputIsReady = true;
+                this.clearAll();
+                clearInterval(this.midiObserverId);
+                return;
+              }
+            } 
+            console.log("cannot find Uplight");
+          } catch (e) {
+            console.log("cannot find MIDI device");
           }
-          var outputIterator = midiAccess.outputs.values();
-          for (var o = outputIterator.next(); !o.done; o = outputIterator.next()) {
-            if (o.value.name.match(/Uplight/)) {
-              this.outputDevice = o.value;
-              console.log(this.outputDevice.name);
-              this.midiOutputIsReady = true;
-              this.clearAll();
-              clearInterval(this.midiObserverId);
-              return;
-            }
-          } 
-          console.log("cannot find Uplight");
-        } catch (e) {
-          console.log("cannot find MIDI device");
-        }
-      },
-      (msg) => {
+        },
+        (msg) => {
         //失敗
         console.log("Failed to get MIDI access - " + msg);
-      });
+        });
+      } catch (e) {
+        console.log("cannot find MIDI device");
+      }
     },
     setInputDevice(input) {
       if (input.target.value == -1) {

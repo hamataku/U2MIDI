@@ -2,8 +2,8 @@ Vue.component('video_list', {
   props: ['list', 'video_lists', 'title'],
   template:`
       <div class="m-4">
-        <div class="rounded-pill bg-primary px-3 py-2 mx-auto" style="width: fit-content">
-          <h4 class="text-center text-white m-0" style="width: fit-content">{{ title }}</h4>
+        <div class="px-3 py-2 mx-auto" style="width: fit-content">
+          <h4 class="text-center m-0" style="width: fit-content"><span>{{ title }}</span></h4>
         </div> 
         <div class="row justify-content-center">
           <div v-for="n in list" class="card m-2" style="width: 18rem;">
