@@ -12,39 +12,44 @@
     <div id="app">
       <vue_navbar></vue_navbar>
       <div class="container">
-        <p>Room ID: {{ id }}</p>
-        <div class="input-group mb-3">
-          <input v-model="roomName" type="text" class="form-control" placeholder="ルームネームを入力してください" aria-label="ルームネームを入力してください" aria-describedby="button-addon2">
-          <button class="btn btn-outline-secondary" type="button" @click="join">参加</button>
-        </div>
-        <div id="monitor">
-          <div id="monitorscreen">
-              <video class="fluid-video" id="remote-video" playsinline></video>
+        <div class="row">
+          <div class="col-md-8 offset-md-2">
+            <br>
+            <p>Room ID: {{ id }}</p>
+            <div class="input-group mb-3">
+              <input v-model="roomName" type="text" class="form-control" placeholder="ルームネームを入力してください" aria-label="ルームネームを入力してください" aria-describedby="button-addon2">
+              <button class="btn btn-outline-secondary" type="button" @click="join">参加</button>
+            </div>
+            <div id="monitor">
+              <div id="monitorscreen">
+                  <video class="fluid-video" id="remote-video" playsinline></video>
+              </div>
+            </div>
+            <table class="table table-borderless">
+              <tbody>
+                <tr>
+                  <th scope="row">光る位置の調整</th>
+                  <td>
+                    <button @click="lightDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                    <span class="font-weight-normal px-2">{{light}}</span>
+                    <button @click="lightUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">キーボード</th>
+                  <td>
+                    <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
+                      <option selected :value="-1">MIDIキーボードを選択</option>
+                      <option v-for="(input, index) in inputDevices" :value="index">
+                        {{input.name}}
+                      </option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
-        <table class="table table-borderless">
-          <tbody>
-            <tr>
-              <th scope="row">光る位置の調整</th>
-              <td>
-                <button @click="lightDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
-                <span class="font-weight-normal px-2">{{light}}</span>
-                <button @click="lightUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">キーボード</th>
-              <td>
-                <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
-                  <option selected :value="-1">MIDIキーボードを選択</option>
-                  <option v-for="(input, index) in inputDevices" :value="index">
-                    {{input.name}}
-                  </option>
-                </select>
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
       <vue_footer></vue_footer>
     </div>

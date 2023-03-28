@@ -36,83 +36,87 @@ Vue.component('scoring_component', {
   template:`
       <div>
         <div id="scoring_component" class="container">
-          <div id="monitor">
-            <div id="monitorscreen">
-                <video
-                id="my-player"
-                class="video-js vjs-fluid"
-                preload="auto"
-                playbackRates="[0.2, 0.5, 1, 1.5, 2]"
-                >
-                  <source :src="'../' + data[1]" type="video/mp4"/>
-                </video>
-            </div>
-          </div>
-          <div class="text-center" style="height: 60px;" v-show="!song_finished">
-            <p v-show="good" class="good">Good!</p>
-            <p v-show="miss" class="miss">miss...</p>
-          </div>
-          <div v-show="song_finished" class="text-center">
-            <p><span class="score">{{ score }}</span>点</p>
-            <p class="score_info">{{ key_correct_count }} / {{ key_note_count }}</p>
-            <a href="../index.html"><button type="button" class="btn btn-primary">メニューに戻る</button></a>
-            <button type="button" class="btn btn-secondary" @click="retry">　　もう一度　　</button>
-          </div>
-          <div class="bar bar-1">
-            <div class='bar-led' v-for="n in 12 " :id="'num'+(n-1)" :key="n"></div>
-          </div>
-          <div class="bar bar-2">
-            <div class='bar-led' v-for="n in 12 " :id="'num'+(n+11)" :key="n+12"></div>
-          </div>
-          <div class="bar bar-3">
-            <div class='bar-led' v-for="n in 12 " :id="'num'+(n+23)" :key="n+24"></div>
-          </div>
-          <table class="table table-borderless" v-show="!song_finished">
-            <tbody>
-              <tr>
-                <th scope="row">光る位置の調整</th>
-                <td>
-                  <button @click="lightDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
-                  <span class="font-weight-normal px-2">{{light}}</span>
-                  <button @click="lightUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
-                </td>
-              </tr>
-              <tr>
-              <th scope="row">鍵盤のオクターブ調整</th>
-                <td>
-                  <button @click="octaveDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
-                  <span class="font-weight-normal px-2">{{octave}}</span>
-                  <button @click="octaveUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
-                </td>
-              </tr>
-              <tr>
-                <th scope="row">キーボード</th>
-                <td>
-                  <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
-                    <option selected :value="-1">MIDIキーボードを選択</option>
-                    <option v-for="(input, index) in inputDevices" :value="index">
-                      {{input.name}}
-                    </option>
-                  </select>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="d-grid gap-2 d-md-block">
-            <button v-show="!song_finished" class="btn btn-primary" type="button" @click="startSong()">開始</button>
-          </div>
+          <div class="row">
+            <div class="col-md-8 offset-md-2">
+              <div id="monitor">
+                <div id="monitorscreen">
+                    <video
+                    id="my-player"
+                    class="video-js vjs-fluid"
+                    preload="auto"
+                    playbackRates="[0.2, 0.5, 1, 1.5, 2]"
+                    >
+                      <source :src="'../' + data[1]" type="video/mp4"/>
+                    </video>
+                </div>
+              </div>
+              <div class="text-center" style="height: 60px;" v-show="!song_finished">
+                <p v-show="good" class="good">Good!</p>
+                <p v-show="miss" class="miss">miss...</p>
+              </div>
+              <div v-show="song_finished" class="text-center">
+                <p><span class="score">{{ score }}</span>点</p>
+                <p class="score_info">{{ key_correct_count }} / {{ key_note_count }}</p>
+                <a href="../index.html"><button type="button" class="btn btn-primary">メニューに戻る</button></a>
+                <button type="button" class="btn btn-secondary" @click="retry">　　もう一度　　</button>
+              </div>
+              <div class="bar bar-1">
+                <div class='bar-led' v-for="n in 12 " :id="'num'+(n-1)" :key="n"></div>
+              </div>
+              <div class="bar bar-2">
+                <div class='bar-led' v-for="n in 12 " :id="'num'+(n+11)" :key="n+12"></div>
+              </div>
+              <div class="bar bar-3">
+                <div class='bar-led' v-for="n in 12 " :id="'num'+(n+23)" :key="n+24"></div>
+              </div>
+              <table class="table table-borderless" v-show="!song_finished">
+                <tbody>
+                  <tr>
+                    <th scope="row">光る位置の調整</th>
+                    <td>
+                      <button @click="lightDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                      <span class="font-weight-normal px-2">{{light}}</span>
+                      <button @click="lightUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                    </td>
+                  </tr>
+                  <tr>
+                  <th scope="row">鍵盤のオクターブ調整</th>
+                    <td>
+                      <button @click="octaveDown" class="btn btn-outline-secondary btn-sm px-2">ー</button>
+                      <span class="font-weight-normal px-2">{{octave}}</span>
+                      <button @click="octaveUp" class="btn btn-outline-secondary btn-sm px-2">＋</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">キーボード</th>
+                    <td>
+                      <select class="form-select" aria-label="MIDIキーボードを選択" @change="setInputDevice">
+                        <option selected :value="-1">MIDIキーボードを選択</option>
+                        <option v-for="(input, index) in inputDevices" :value="index">
+                          {{input.name}}
+                        </option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="d-grid gap-2 d-md-block">
+                <button v-show="!song_finished" class="btn btn-primary" type="button" @click="startSong()">開始</button>
+              </div>
 
-          <div class="accordion accordion-flush" id="accordionFlushExample" v-show="!song_finished">
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="flush-headingOne">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
-                  キーボード認識結果
-                </button>
-              </h2>
-              <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
-                <div class="accordion-body">
-                  <canvas class="keyboard-output" id="canvasOutput1"></canvas>
-                  <canvas class="keyboard-output" id="canvasOutput2"></canvas>
+              <div class="accordion accordion-flush" id="accordionFlushExample" v-show="!song_finished">
+                <div class="accordion-item">
+                  <h2 class="accordion-header" id="flush-headingOne">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                      キーボード認識結果
+                    </button>
+                  </h2>
+                  <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                    <div class="accordion-body">
+                      <canvas class="keyboard-output" id="canvasOutput1"></canvas>
+                      <canvas class="keyboard-output" id="canvasOutput2"></canvas>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
