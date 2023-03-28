@@ -3,8 +3,8 @@ new Vue({
   data: {
     video_lists: [
     ["きらきら星", "videos/beginner/kirakira_boshi.mp4", "videos/beginner/kirakira_boshi.png"],
-    ["さんぽ", "videos/beginner/sanpo.mp4", "videos/beginner/sanpo.png"],
     ["かえるのうた", "videos/intermediate/kaeru_no_uta.mp4", "videos/intermediate/kaeru_no_uta.png"],
+    ["小さな世界", "videos/beginner/small.mp4", "videos/beginner/small.png"],
     ["となりのトトロ", "videos/intermediate/tonari_no_totoro.mp4", "videos/intermediate/tonari_no_totoro.png"],
     ["ビリーブ", "videos/advanced/believe.mp4", "videos/advanced/believe.png"],
     ["カントリーロード", "videos/advanced/country_road.mp4", "videos/advanced/country_road.png"],

@@ -27,6 +27,44 @@ nav, footer {
   height:100%;
 }
 
+.bar {
+  width: 80%;
+  background-color: #000;
+  aspect-ratio: 20 / 1;
+  display: flex; /* flexboxを使用する */
+  justify-content: space-around; /* 等間隔に配置する */
+  margin-bottom: 10px;
+  border-radius: 1vw;
+}
+
+.bar-2 {
+  margin-left: 10%;
+}
+
+.bar-3 {
+  margin-left: 20%;
+  background-color: ;
+}
+
+/* .bar-name {
+  color: #fff;
+  font-size: 3vw;
+  padding-top: 1%;
+  padding-left: 50%;
+  position: absolute;
+} */
+
+.bar-led {
+  background-color: #fff;
+  width: 1vw;
+  height: 1vw;
+  margin-top: auto;
+  margin-bottom: auto;
+  border-radius: 0.3vw;
+}
+
+
+
 /* css piano */
 :root {
   --keyboard: hsl(300, 100%, 16%);
@@ -54,7 +92,7 @@ nav, footer {
   display: inline-block;
 }
 
-h2 {
+h4 {
   margin: 4px;
 }
 
@@ -219,4 +257,42 @@ h2 {
 	  0%   { box-shadow: 0 0 100px 0 rgba(225,235,255,0.4); }
 	  100% { box-shadow: 0 0 60px 0 rgba(200,220,255,0.6); }
 	}
+}
+
+h4 {
+  line-height: 60px;
+  position: relative;
+  height: 60px;
+  margin: 2em 50px 1em;
+  padding: 0 2rem;
+  text-align: center;
+  color: #fff;
+  background: #fa4141;
+}
+
+h4:before,
+h4:after {
+  position: absolute;
+  top: 0;
+  display: block;
+  height: 48px;
+  content: '';
+  border: 30px solid #fa4141;
+}
+
+h4:before {
+  left: -40px;
+  border-left-width: 15px;
+  border-left-color: transparent;
+}
+
+h4:after {
+  right: -40px;
+  border-right-width: 15px;
+  border-right-color: transparent;
+}
+
+h4 span {
+  position: relative;
+  display: block;
 }
